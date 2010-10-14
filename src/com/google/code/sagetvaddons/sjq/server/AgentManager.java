@@ -17,9 +17,9 @@ package com.google.code.sagetvaddons.sjq.server;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
@@ -28,12 +28,9 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
  * @author dbattams
  *
  */
-public final class AgentManager implements Runnable {
+public final class AgentManager extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(AgentManager.class);
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Runnable#run()
-	 */
 	@Override
 	public void run() {
 		DataStore ds = DataStore.get();
@@ -58,10 +55,5 @@ public final class AgentManager implements Runnable {
 			c.setLastUpdate(new Date());
 			ds.saveClient(c);
 		}
-	}
-	
-	static public void main(String[] args) {
-		PropertyConfigurator.configure("sjq.log4j.properties");
-		new AgentManager().run();
-	}
+	}	
 }

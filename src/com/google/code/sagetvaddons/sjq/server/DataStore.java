@@ -15,6 +15,8 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import gkusnick.sagetv.api.API;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -34,7 +36,6 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.google.code.sagetvaddons.sjq.server.TaskQueue.PendingTask;
 import com.google.code.sagetvaddons.sjq.shared.Client;
@@ -63,7 +64,6 @@ public final class DataStore {
 	};
 
 	static public final DataStore get() {
-		PropertyConfigurator.configure("sjq.log4j.properties");
 		DataStore ds = POOL.get();
 		int retries = 5;
 		while(retries-- > 0 && !ds.isValid())
@@ -72,8 +72,7 @@ public final class DataStore {
 	}
 
 	static private final String SQL_ERROR = "SQL Error";
-	//static private final String JDBC_URL= "jdbc:h2:tcp://" + API.apiNullUI.global.GetServerAddress() + ":" + API.apiNullUI.configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
-	static private final String JDBC_URL = "jdbc:h2:tcp://192.168.1.11:9092/plugins/sjq/sjq4";
+	static private final String JDBC_URL= "jdbc:h2:tcp://" + API.apiNullUI.global.GetServerAddress() + ":" + API.apiNullUI.configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
 
 	static private final String READ_SETTING = "ReadSetting";
 	static private final String READ_CLIENT = "ReadClient";

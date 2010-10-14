@@ -50,7 +50,7 @@ SJQv4
 	<PluginType>Standard</PluginType>
 	<Package>
 		<PackageType>JAR</PackageType>
-		<Location>http://sagetv-addons.googlecode.com/files/sjq-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
+		<Location>http://sagetv-addons.googlecode.com/files/sjq-jar-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
 		<MD5>@@JAR_MD5@@</MD5>
 	</Package>
 	<Package>
@@ -58,7 +58,7 @@ SJQv4
 		<Location>http://sagetv-addons.googlecode.com/files/sjq-conf-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
 		<MD5>@@CONF_MD5@@</MD5>
 	</Package>
-	<ImplementationClass>com.google.code.sagetvaddons.sjq.plugin.Plugin</ImplementationClass>
+	<ImplementationClass>com.google.code.sagetvaddons.sjq.server.Plugin</ImplementationClass>
 	<ReleaseNotes>
 Changes since @@VER_NUM@@.@@BLD_STABLE@@
  
