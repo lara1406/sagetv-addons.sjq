@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="SAGELIB/gkusnick.sagetv.jar"/>
+	<classpathentry kind="var" path="SAGELIB/log4j-1.2.15.jar"/>
+	<classpathentry kind="var" path="SAGE_HOME/Sage.jar"/>
+	<classpathentry kind="var" path="SAGELIB/commons-lang-2.4.jar"/>
+	<classpathentry kind="var" path="SAGELIB/commons-io-1.4.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SageObjectMetadataFactory"/>
+	<classpathentry kind="var" path="SAGELIB/cron4j-2.2.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

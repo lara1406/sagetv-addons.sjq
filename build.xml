@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="SJQv4" default="build" basedir=".">
+	  <!-- Import svn tasks -->
+	  <taskdef resource="org/tigris/subversion/svnant/svnantlib.xml" />
+	  <taskdef resource="proguard/ant/task.properties" />
+
+  <property name="sage.libs" value="C:/Users/dbattams/sagelibs" />
+  <property name="app.ver" value="4.0.0" />
+  <property name="app.stable" value="971" />
+  <property name="sage.jar" value="C:/Program Files/SageTV/SageTV/Sage.jar" />
+  <property name="src.token" value="@@" />
+  <property name="bld.dir" value="bld" />
+  <property name="gc.upload.settings" value="C:/snapshots/gc_login.properties" />
+	
+  <path id="project.class.path">
+    <!-- Add any additional non-server libs (such as JUnit) -->
+  	<fileset dir="${sage.libs}" includes="**/*.jar"/>
+  	<pathelement location="${sage.jar}"/>
+  </path>
+
+	  <target name="tstamp" description="Generate current timestamp">
+	    <tstamp>
+	      <format property="app.bld.date" pattern="yyyy.MM.dd" />
+	    </tstamp>
+	    <svn javahl="true">
+	            <wcVersion path="." />
+	    </svn>
+	    <exec executable="svn" failonerror="true" outputproperty="changelog.out">
+	       <arg value="log"/>
+	       <arg value="-r${app.stable}:HEAD"/>
+	    </exec>
+	  </target>
+	  	
+	  <target name="rmgensrc" description="Delete generated src files">
+	  	<delete failonerror="false" verbose="true">
+	  		<fileset dir="." includes="*.plugin.xml" />
+	  		<fileset dir="src" includes="**/Version.java" />
+	  	</delete>
+	  </target>
+		
+	  <target name="gensrc" depends="tstamp,rmgensrc" description="Create generated src files">
+	  	<copy todir="." overwrite="true" verbose="true">
+	  	  <fileset dir=".">
+	  	    <include name="**/*.in"/>
+	  	  </fileset>
+	  	  <mapper type="glob" from="*.in" to="*"/>
+	  	  <filterset begintoken="${src.token}" endtoken="${src.token}">
+	  	    <filter token="VER_NUM" value="${app.ver}"/>
+	  	    <filter token="BLD_NUM" value="${revision.max-with-flags}"/>
+	  	  	<filter token="MOD_DATE" value="${app.bld.date}"/>
+	  	  	<filter token="CHG_LOG" value="${changelog.out}"/>
+	  	  	<filter token="BLD_STABLE" value="${app.stable}"/>
+	  	  </filterset>
+	    </copy> 
+	  </target>
+
+  <target name="libs" depends="gensrc" description="Copy libs to WEB-INF/lib">
+
+  </target>
+
+  <target name="javac" depends="libs" description="Compile java source">
+    <mkdir dir="jars" />
+  	<mkdir dir="${bld.dir}"/>
+    <javac srcdir="src" includes="**" encoding="utf-8"
+        destdir="${bld.dir}"
+        source="1.5" target="1.5" nowarn="true"
+        debug="true" debuglevel="lines,vars,source">
+      <classpath refid="project.class.path"/>
+    </javac>
+  </target>
+
+  <target name="build" depends="javac" description="Build this project" />
+
+  <target name="jars" depends="build">
+	<jar destfile="sjq-shared.jar" basedir="${bld.dir}" includes="**/shared/*" filesonly="true" />
+  	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/server/DataStore.*" filesonly="true" />
+  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore.*" filesonly="true" />
+<!--
+  	<proguard>
+		-libraryjars "${java.home}/lib/rt.jar"
+		-libraryjars "${sage.libs}/log4j-1.2.15.jar"
+		-libraryjars "${sage.libs}/json.jar"
+		-libraryjars "${sage.libs}/gkusnick.sagetv.jar"
+		-libraryjars "${sage.libs}/mail.jar"
+		-libraryjars "${sage.libs}/libgrowl.jar"
+		-libraryjars "${sage.libs}/twitter4j-core-2.1.2.jar"
+		-libraryjars "${sage.libs}/commons-io-1.4.jar"
+		-libraryjars "${sage.libs}/commons-codec-1.3.jar"
+  		-libraryjars "${sage.libs}/commons-exec-1.0.1.jar"
+		-libraryjars "${sage.jar}"
+		-libraryjars "${gwt.sdk}/gwt-user.jar"
+		-libraryjars "${gxt.home}/gxt.jar"
+		-libraryjars "sagealert-common.jar"
+		-libraryjars "${sage.libs}/jetty-6.1.19.jar"
+		-libraryjars "${sage.libs}/sqlitejdbc-v056.jar"
+		-libraryjars "${java.home}/lib/jce.jar"
+  		-libraryjars "${sage.libs}/commons-lang-2.4.jar"
+  		-libraryjars "${sage.libs}/commons-beanutils-1.8.3.jar"
+        -injars jars/sagealert-plain.jar
+        -outjars sagealert.jar
+  		-dontusemixedcaseclassnames
+        -printseeds
+        -printusage sagealert.pro.${revision.max-with-flags}.dead
+        -renamesourcefileattribute SourceFile
+        -keepattributes SourceFile,LineNumberTable
+        -printmapping sagealert.pro.${revision.max-with-flags}.map
+        -keep public class * implements javax.servlet.ServletContextListener
+        -keep public class * implements com.google.gwt.user.server.rpc.RemoteServiceServlet
+  		-keep public class * implements sage.SageTVPlugin {
+			public &lt;init&gt;(sage.SageTVPluginRegistry);
+			public &lt;init&gt;(sage.SageTVPluginRegistry, boolean);
+  		}
+		-keepclassmembernames public class * implements com.google.code.sagetvaddons.sagealert.shared.IsDataStoreSerializable {
+			public void unserialize(java.lang.String, java.lang.String);
+		}
+		-keep public class * implements javax.servlet.http.HttpServlet
+  		-keep public class ***.server.events.*TestEvent {
+  			public &lt;init&gt;(java.util.Map);
+  		}
+  		-keep public class com.google.code.sagetvaddons.sagealert.server.globals.** {
+  			public *;
+  		}
+  		
+		-printconfiguration sagealert.pro
+    </proguard>
+-->
+    <zip destfile="sagealert-proguard-dbg-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sagealert.pro.*" />
+  </target>
+	
+  <target name="app_plugin" depends="common_plugin">
+  	<delete dir="app_plugin" failonerror="false" />
+  	<property name="app_base" value="app_plugin/plugins/sagealert" />
+    <mkdir dir="${app_base}" />
+  	<filelist id="bins" dir="." files="sagealert.jar,SageAlert.war,SageAlert.context.xml,sagealert.log4j.properties" />
+  	<copy todir="${app_base}">
+  	  <filelist refid="bins" />
+  	</copy>
+  	<zip destfile="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sagealert.jar" />
+  	<checksum file="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
+  	<replace file="app.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
+  	<zip destfile="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" excludes="**/*.properties" />
+  	<checksum file="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" property="bin.web.md5" />
+  	<replace file="app.plugin.xml" token="@@WEB_MD5@@" value="${bin.web.md5}" />
+  	<zip destfile="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" includes="**/*.properties" />
+  	<checksum file="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
+  	<replace file="app.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
+  </target>
+	
+  <target name="common_plugin" depends="jars">
+  	<delete dir="common_plugin" failonerror="false" />
+  	<property name="common_base" value="common_plugin" />
+    <mkdir dir="${common_base}" />
+  	<filelist id="bins" dir="." files="sagealert-common.jar" />
+  	<copy todir="${common_base}">
+  	  <filelist refid="bins" />
+  	</copy>
+  	<zip destfile="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" basedir="${common_base}" includes="sagealert-common.jar" />
+  	<checksum file="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" property="bin.common.md5" />
+  	<replace file="common.plugin.xml" token="@@COMMON_MD5@@" value="${bin.common.md5}" />
+  </target>
+
+  <target name="deliver" depends="app_plugin" description="Upload build to Google Code">
+	<available file="${gc.upload.settings}" property="gc.upload.enable" />
+	<fail message="${gc.upload.settings} file does not exist!" unless="gc.upload.enable" />
+	<property file="${gc.upload.settings}" />
+	<fail message="gc.username must be defined in ${gc.upload.settings}" unless="gc.username" />
+	<fail message="gc.password must be defined in ${gc.upload.settings}" unless="gc.password" />
+	<taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask" name="gcupload" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (plugin JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (J2EE app)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (config files)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (common JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+  </target>
+
+  <target name="submit" depends="deliver" description="Submit plugin to SageTV repository">
+	<taskdef classname="com.google.code.sagetvaddons.dev.ant.task.SageTvPluginSubmitter" name="sagesubmit" />
+	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sagealert-common" reqtype="UPGRADE" descriptor="common.plugin.xml" />
+	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sagealert" reqtype="UPGRADE" descriptor="app.plugin.xml" />
+  </target>
+	
+  <target name="clean" depends="rmgensrc" description="Cleans this project">
+    <delete dir="jars" failonerror="false" />
+  	<delete dir="${bld.dir}" failonerror="false" />
+  	<delete dir="common_plugin" failonerror="false" />
+  	<delete dir="app_plugin" failonerror="false" />
+  	<delete failonerror="false">
+  	  <fileset dir="." includes="sagealert-*.zip,SageAlert.war,sagealert.jar,sagealert-common.jar,sagealert.pro*" />
+    </delete>
+  </target>
+
+</project>
