@@ -1,0 +1,67 @@
+<SageTVPlugin>
+	<Name>Sage Job Queue (SJQ)</Name>
+	<Identifier>sjq</Identifier>
+	<Description>
+SJQv4
+	</Description>
+	<Author>Slugger</Author>
+	<CreationDate>2007.05.02</CreationDate>
+	<ModificationDate>@@MOD_DATE@@</ModificationDate>
+	<Version beta="true">@@VER_NUM@@.@@BLD_NUM@@</Version>
+	<ResourcePath>plugins/sjq</ResourcePath>
+	<Webpage>http://sagetv-addons.googlecode.com</Webpage>
+	<ServerOnly>true</ServerOnly>
+	<Dependency>
+		<JVM/>
+		<MinVersion>1.5.0</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Core/>
+		<MinVersion>7.0.9</MinVersion>
+	</Dependency>
+		<Dependency>
+		<Plugin>GKusnickToolsLib</Plugin>
+		<MinVersion>1.2</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>log4j</Plugin>
+		<MinVersion>1.2.15</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>commons-lang</Plugin>
+		<MinVersion>2.4</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>commons-io</Plugin>
+		<MinVersion>1.4</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>cron4j</Plugin>
+		<MinVersion>2.2.1</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>sjq-common</Plugin>
+		<MinVersion>@@VER_NUM@@.@@BLD_NUM@@</MinVersion>
+	</Dependency>
+	<Dependency>
+		<Plugin>sjq-listener</Plugin>
+		<MinVersion>4.0.0</MinVersion>
+	</Dependency>
+	<PluginType>Standard</PluginType>
+	<Package>
+		<PackageType>JAR</PackageType>
+		<Location>http://sagetv-addons.googlecode.com/files/sjq-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
+		<MD5>@@JAR_MD5@@</MD5>
+	</Package>
+	<Package>
+		<PackageType>System</PackageType>
+		<Location>http://sagetv-addons.googlecode.com/files/sjq-conf-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
+		<MD5>@@CONF_MD5@@</MD5>
+	</Package>
+	<ImplementationClass>com.google.code.sagetvaddons.sjq.plugin.Plugin</ImplementationClass>
+	<ReleaseNotes>
+Changes since @@VER_NUM@@.@@BLD_STABLE@@
+ 
+@@CHG_LOG@@ 
+	</ReleaseNotes>
+</SageTVPlugin>

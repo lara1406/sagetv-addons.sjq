@@ -15,6 +15,8 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import gkusnick.sagetv.api.API;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
@@ -152,7 +154,9 @@ final public class TaskQueue {
 					if(activeInst >= task.getMaxInstances()) {
 						LOG.warn("Client is already running max instances of '" + t.getTaskId() + "'; skipping: " + c);
 					}
-					qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort());
+					// TODO Remove hardcoded RMI port
+					qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort(), 1098);
+					//qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort(), Integer.parseInt(API.apiNullUI.configuration.GetServerProperty("sagex/api/RMIPort", "1098")));
 					assignedClnt = c;
 					if(ds.updateTask(qt)) {
 						State state = agent.exe(qt);

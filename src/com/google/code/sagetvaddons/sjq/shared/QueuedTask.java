@@ -45,6 +45,7 @@ public class QueuedTask extends Task {
 	private Client assignee;
 	private int serverPort;
 	private String serverHost;
+	private int rmiPort;
 	
 	/**
 	 * 
@@ -69,7 +70,7 @@ public class QueuedTask extends Task {
 			String schedule, String executable, String exeArguments,
 			long maxTime, float maxTimeRatio, int minReturnCode,
 			int maxReturnCode, Map<String, String> metadata, Date created, Date assigned,
-			Date completed, State state, Client assignee, String serverHost, int serverPort, String test, String testArgs) {
+			Date completed, State state, Client assignee, String serverHost, int serverPort, String test, String testArgs, int rmiPort) {
 		super(id, requiredResources, maxInstances, schedule, executable,
 				exeArguments, maxTime, maxTimeRatio, minReturnCode,
 				maxReturnCode, test, testArgs);
@@ -82,12 +83,13 @@ public class QueuedTask extends Task {
 		this.state = state;
 		this.serverHost = serverHost;
 		this.serverPort = serverPort;
+		this.rmiPort = rmiPort;
 	}
 
-	public QueuedTask(Task t, long qId, Map<String, String> metadata, Date created, Date assigned, Date completed, State state, Client assignee, String serverHost, int serverPort) {
+	public QueuedTask(Task t, long qId, Map<String, String> metadata, Date created, Date assigned, Date completed, State state, Client assignee, String serverHost, int serverPort, int rmiPort) {
 		this(qId, t.getId(), t.getRequiredResources(), t.getMaxInstances(), t.getSchedule(), t.getExecutable(), t.getExeArguments(),
 				t.getMaxTime(), t.getMaxTimeRatio(), t.getMinReturnCode(), t.getMaxReturnCode(), metadata, created,
-				assigned, completed, state, assignee, serverHost, serverPort, t.getTest(), t.getTestArgs());
+				assigned, completed, state, assignee, serverHost, serverPort, t.getTest(), t.getTestArgs(), rmiPort);
 	}
 	
 	/**
@@ -214,5 +216,19 @@ public class QueuedTask extends Task {
 	 */
 	public void setServerHost(String serverHost) {
 		this.serverHost = serverHost;
+	}
+
+	/**
+	 * @return the rmiPort
+	 */
+	public int getRmiPort() {
+		return rmiPort;
+	}
+
+	/**
+	 * @param rmiPort the rmiPort to set
+	 */
+	public void setRmiPort(int rmiPort) {
+		this.rmiPort = rmiPort;
 	}	
 }

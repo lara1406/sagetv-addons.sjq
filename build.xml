@@ -4,7 +4,7 @@
 	  <taskdef resource="org/tigris/subversion/svnant/svnantlib.xml" />
 	  <taskdef resource="proguard/ant/task.properties" />
 
-  <property name="sage.libs" value="C:/Users/dbattams/sagelibs" />
+  <property name="sage.libs" value="//SAGETV/SharedDocs/sagelibs/" />
   <property name="app.ver" value="4.0.0" />
   <property name="app.stable" value="971" />
   <property name="sage.jar" value="C:/Program Files/SageTV/SageTV/Sage.jar" />
@@ -59,7 +59,6 @@
   </target>
 
   <target name="javac" depends="libs" description="Compile java source">
-    <mkdir dir="jars" />
   	<mkdir dir="${bld.dir}"/>
     <javac srcdir="src" includes="**" encoding="utf-8"
         destdir="${bld.dir}"
@@ -72,9 +71,8 @@
   <target name="build" depends="javac" description="Build this project" />
 
   <target name="jars" depends="build">
-	<jar destfile="sjq-shared.jar" basedir="${bld.dir}" includes="**/shared/*" filesonly="true" />
-  	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/server/DataStore.*" filesonly="true" />
-  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore.*" filesonly="true" />
+	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/shared/*,**/server/DataStore*.*" filesonly="true" />
+  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore*.*" filesonly="true" />
 <!--
   	<proguard>
 		-libraryjars "${java.home}/lib/rt.jar"
@@ -123,41 +121,33 @@
   		
 		-printconfiguration sagealert.pro
     </proguard>
--->
     <zip destfile="sagealert-proguard-dbg-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sagealert.pro.*" />
+-->
   </target>
 	
   <target name="app_plugin" depends="common_plugin">
   	<delete dir="app_plugin" failonerror="false" />
-  	<property name="app_base" value="app_plugin/plugins/sagealert" />
+  	<property name="app_base" value="app_plugin/plugins/sjq" />
     <mkdir dir="${app_base}" />
-  	<filelist id="bins" dir="." files="sagealert.jar,SageAlert.war,SageAlert.context.xml,sagealert.log4j.properties" />
+  	<filelist id="bins" dir="." files="sjq.log4j.properties,sjq4.properties" />
   	<copy todir="${app_base}">
   	  <filelist refid="bins" />
   	</copy>
-  	<zip destfile="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sagealert.jar" />
-  	<checksum file="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
-  	<replace file="app.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
-  	<zip destfile="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" excludes="**/*.properties" />
-  	<checksum file="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" property="bin.web.md5" />
-  	<replace file="app.plugin.xml" token="@@WEB_MD5@@" value="${bin.web.md5}" />
-  	<zip destfile="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" includes="**/*.properties" />
-  	<checksum file="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
-  	<replace file="app.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
+  	<zip destfile="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sjq.jar" />
+  	<checksum file="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
+  	<replace file="sjq.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
+  	<zip destfile="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" includes="**/*.properties" />
+  	<checksum file="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
+  	<replace file="sjq.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
   </target>
 	
   <target name="common_plugin" depends="jars">
-  	<delete dir="common_plugin" failonerror="false" />
-  	<property name="common_base" value="common_plugin" />
-    <mkdir dir="${common_base}" />
-  	<filelist id="bins" dir="." files="sagealert-common.jar" />
-  	<copy todir="${common_base}">
-  	  <filelist refid="bins" />
-  	</copy>
-  	<zip destfile="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" basedir="${common_base}" includes="sagealert-common.jar" />
-  	<checksum file="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" property="bin.common.md5" />
-  	<replace file="common.plugin.xml" token="@@COMMON_MD5@@" value="${bin.common.md5}" />
+  	<zip destfile="sjq-common-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sjq-common.jar" />
+  	<checksum file="sjq-common-${app.ver}.${revision.max-with-flags}.zip" property="bin.common.md5" />
+  	<replace file="sjq-common.plugin.xml" token="@@COMMON_MD5@@" value="${bin.common.md5}" />
   </target>
+
+  <target name="plugin" depends="app_plugin" />
 
   <target name="deliver" depends="app_plugin" description="Upload build to Google Code">
 	<available file="${gc.upload.settings}" property="gc.upload.enable" />
@@ -179,12 +169,10 @@
   </target>
 	
   <target name="clean" depends="rmgensrc" description="Cleans this project">
-    <delete dir="jars" failonerror="false" />
   	<delete dir="${bld.dir}" failonerror="false" />
-  	<delete dir="common_plugin" failonerror="false" />
   	<delete dir="app_plugin" failonerror="false" />
   	<delete failonerror="false">
-  	  <fileset dir="." includes="sagealert-*.zip,SageAlert.war,sagealert.jar,sagealert-common.jar,sagealert.pro*" />
+  	  <fileset dir="." includes="sjq*.jar,sjq.pro*,sjq-*.zip" />
     </delete>
   </target>
 
