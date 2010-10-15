@@ -35,7 +35,8 @@ public class QueuedTask extends Task {
 		FAILED,
 		COMPLETED,
 		RETURNED,
-		STARTED
+		STARTED,
+		SKIPPED
 	}
 	
 	private long qId;

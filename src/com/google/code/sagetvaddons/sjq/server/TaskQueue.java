@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
@@ -96,7 +95,7 @@ final public class TaskQueue {
 		
 	}
 	
-	synchronized long addTask(String id, Map<String, String> metadata) throws IOException {
+	synchronized public long addTask(String id, Map<String, String> metadata) throws IOException {
 		try {
 			return DataStore.get().addTask(id, metadata);
 		} catch (SQLException e) {
@@ -179,11 +178,5 @@ final public class TaskQueue {
 	
 	synchronized public boolean updateTask(QueuedTask qt) {
 		return DataStore.get().updateTask(qt);
-	}
-	
-	static public void main(String[] args) throws IOException {
-		PropertyConfigurator.configure("sjq.log4j.properties");
-		//System.out.println("Added new task to queue! [" + TaskQueue.get().addTask("foobar", Collections.singletonMap("Foo", "barz")) + "]");
-		TaskQueue.get().startTasks();
-	}
+	}	
 }

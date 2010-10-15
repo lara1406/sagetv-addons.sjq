@@ -73,7 +73,7 @@ public final class DataStore {
 
 	static private final String SQL_ERROR = "SQL Error";
 	static private final String JDBC_URL= "jdbc:h2:tcp://" + API.apiNullUI.global.GetServerAddress() + ":" + API.apiNullUI.configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
-
+	//static private final String JDBC_URL= "jdbc:h2:tcp://192.168.1.11:9092/plugins/sjq/sjq4";
 	static private final String READ_SETTING = "ReadSetting";
 	static private final String READ_CLIENT = "ReadClient";
 	static private final String READ_ALL_CLIENTS = "ReadAllClnts";
@@ -94,6 +94,7 @@ public final class DataStore {
 	static private final String COUNT_LOG = "CountLog";
 	static private final String ADD_LOG = "AddLog";
 	static private final String READ_LOG = "ReadLog";
+	static private final String READ_CLNT_TASKS = "ReadClntTasks";
 	
 	static private boolean dbInitialized = false;
 
@@ -262,6 +263,9 @@ public final class DataStore {
 		
 		qry = "SELECT log FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(READ_LOG, conn.prepareStatement(qry));
+		
+		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ?";
+		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
 	}
 
 	/**
@@ -306,6 +310,32 @@ public final class DataStore {
 		}	
 	}
 
+	Task[] getTasksForClient(Client c) {
+		return getTasksForClient(c.getHost(), c.getPort());
+	}
+	
+	Task[] getTasksForClient(String host, int port) {
+		if(host == null || host.length() == 0 || port < 1)
+			throw new IllegalArgumentException("Client keys are invalid!");
+		PreparedStatement pStmt = stmts.get(READ_CLNT_TASKS);
+		ResultSet rs = null;
+		Collection<Task> tasks = new ArrayList<Task>();
+		try {
+			pStmt.setString(1, host);
+			pStmt.setInt(2, port);
+			rs = pStmt.executeQuery();
+			while(rs.next())
+				tasks.add(new Task(rs.getString(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getLong(7), rs.getFloat(8), rs.getInt(9), rs.getInt(10), rs.getString(11), rs.getString(12)));
+			return tasks.toArray(new Task[tasks.size()]);
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return new Task[0];
+		} finally {
+			if(rs != null)
+				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
+		}
+	}
+	
 	Client[] getClientsForTask(String taskId) {
 		PreparedStatement pStmt = stmts.get(CLIENT_FOR_TASK);
 		ResultSet rs = null;
@@ -322,6 +352,32 @@ public final class DataStore {
 		} finally {
 			if(rs != null)
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
+		}
+	}
+	
+	public QueuedTask[] getActiveQueue() {
+		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
+		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port) WHERE state NOT IN ('COMPLETED', 'FAILED', 'SKIPPED')";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(qry);
+			while(rs.next())
+				tasks.add(new QueuedTask(rs.getLong(1), rs.getString(2), rs.getInt(7), rs.getInt(8), rs.getString(9), rs.getString(10), rs.getString(11), rs.getLong(12), rs.getFloat(13), rs.getInt(14), rs.getInt(15), getMetadata(rs.getLong(1)), rs.getTimestamp(3), rs.getTimestamp(4), rs.getTimestamp(5), QueuedTask.State.valueOf(rs.getString(6)), getClient(rs.getString(18), rs.getInt(19)), "localhost", -1, rs.getString(16), rs.getString(17), 1098));
+			return tasks.toArray(new QueuedTask[tasks.size()]);
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return new QueuedTask[0];
+		} finally {
+			try {
+				if(rs != null)
+					rs.close();
+				if(stmt != null)
+					stmt.close();
+			} catch(SQLException e) {
+				LOG.warn(SQL_ERROR, e);
+			}
 		}
 	}
 	
@@ -577,9 +633,11 @@ public final class DataStore {
 			pStmt.setString(1, host);
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
-			// TODO Read and set free resources
-			if(rs.next())
-				return new Client(host, port, 0, rs.getString(2), Client.ClientState.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), null);
+			if(rs.next()) {
+				Client c = new Client(host, port, 0, rs.getString(2), Client.ClientState.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port));
+				c.setFreeResources(getFreeResources(c));
+				return c;
+			}
 			return null;
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
