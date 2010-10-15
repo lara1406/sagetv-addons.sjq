@@ -1,6 +1,5 @@
-com.google.code.sagetvaddons.sjq
-com.google.code.sagetvaddons.sjq.listener
 com.google.code.sagetvaddons.sjq.server
 com.google.code.sagetvaddons.sjq.server.commands
 com.google.code.sagetvaddons.sjq.server.network
 com.google.code.sagetvaddons.sjq.shared
+com.google.code.sagetvaddons.sjq.taskqueue
