@@ -156,16 +156,15 @@
 	<fail message="gc.username must be defined in ${gc.upload.settings}" unless="gc.username" />
 	<fail message="gc.password must be defined in ${gc.upload.settings}" unless="gc.password" />
 	<taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask" name="gcupload" />
-	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-jar-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (plugin JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
-	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-web-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (J2EE app)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
-	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-conf-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (config files)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
-	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sagealert-common-${app.ver}.${revision.max-with-flags}.zip" summary="SageAlert v2 snapshot build (common JAR)" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" summary="SJQv4 engine plugin" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" summary="SJQv4 config files" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
+	<gcupload username="${gc.username}" password="${gc.password}" projectname="sagetv-addons" filename="sjq-common-${app.ver}.${revision.max-with-flags}.zip" targetfilename="sjq-common-${app.ver}.${revision.max-with-flags}.zip" summary="SJQv4 common jar" labels="QA-Snapshot,Type-Plugin,OpSys-All" />
   </target>
 
   <target name="submit" depends="deliver" description="Submit plugin to SageTV repository">
 	<taskdef classname="com.google.code.sagetvaddons.dev.ant.task.SageTvPluginSubmitter" name="sagesubmit" />
-	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sagealert-common" reqtype="UPGRADE" descriptor="common.plugin.xml" />
-	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sagealert" reqtype="UPGRADE" descriptor="app.plugin.xml" />
+	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sjq-common" reqtype="UPGRADE" descriptor="sjq-common.plugin.xml" />
+	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sjq" reqtype="UPGRADE" descriptor="sjq.plugin.xml" />
   </target>
 	
   <target name="clean" depends="rmgensrc" description="Cleans this project">
