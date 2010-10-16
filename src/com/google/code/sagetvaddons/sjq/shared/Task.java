@@ -30,7 +30,7 @@ public class Task implements Serializable {
 	static public final String DEFAULT_SCHED = "* * * * *";
 	static public final String DEFAULT_EXE = null;
 	static public final String DEFAULT_EXE_ARGS = "";
-	static public final long DEFAULT_MAX_TIME = 86400000L;
+	static public final long DEFAULT_MAX_TIME = 86400L;
 	static public final float DEFAULT_MAX_TIME_RATIO = 1.0F;
 	static public final int DEFAULT_MIN_RC = 0;
 	static public final int DEFAULT_MAX_RC = 0;

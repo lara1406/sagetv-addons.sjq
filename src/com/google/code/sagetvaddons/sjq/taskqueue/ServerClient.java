@@ -15,10 +15,11 @@
  */
 package com.google.code.sagetvaddons.sjq.taskqueue;
 
-import gkusnick.sagetv.api.API;
-
 import java.io.IOException;
 import java.util.Map;
+
+import sagex.api.Configuration;
+import sagex.api.Global;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
@@ -40,7 +41,7 @@ public final class ServerClient extends ListenerClient {
 	 * @throws IOException
 	 */
 	public ServerClient() throws IOException {
-		super(API.apiNullUI.global.GetServerAddress(), Integer.parseInt(API.apiNullUI.configuration.GetServerProperty("sjq4/agent_port", "23347")));
+		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")));
 		datastore = DataStore.get();
 	}
 	

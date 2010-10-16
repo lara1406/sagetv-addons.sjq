@@ -32,7 +32,7 @@ public final class Client implements Serializable {
 	 * @author dbattams
 	 *
 	 */
-	static public enum ClientState {
+	static public enum State {
 		ONLINE,
 		OFFLINE,
 		DISABLED
@@ -42,7 +42,7 @@ public final class Client implements Serializable {
 	static public String DEFAULT_SCHED = "* * * * *";
 	
 	private String host;
-	private ClientState state;
+	private State state;
 	private int freeResources;
 	private String schedule;
 	private Date lastUpdate;
@@ -56,7 +56,7 @@ public final class Client implements Serializable {
 	public Client() {
 	}
 
-	public Client(String host, int port, int freeResources, String schedule, ClientState state, Date lastUpdate, int maxResources, Task[] tasks) {
+	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks) {
 		this.host = host;
 		this.freeResources = freeResources;
 		this.schedule = schedule;
@@ -86,14 +86,14 @@ public final class Client implements Serializable {
 	/**
 	 * @return the state
 	 */
-	public ClientState getState() {
+	public State getState() {
 		return state;
 	}
 
 	/**
 	 * @param state the state to set
 	 */
-	public void setState(ClientState state) {
+	public void setState(State state) {
 		this.state = state;
 	}
 

@@ -28,7 +28,6 @@ import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
-import com.google.code.sagetvaddons.sjq.shared.Client.ClientState;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
 
 final public class TaskQueue {
@@ -112,7 +111,7 @@ final public class TaskQueue {
 			Client assignedClnt = null;
 			Client[] clnts = ds.getClientsForTask(t.getTaskId());
 			for(Client c : clnts) {
-				if(c.getState() != Client.ClientState.ONLINE) {
+				if(c.getState() != Client.State.ONLINE) {
 					LOG.info("Client offline, skipping: " + c);
 					continue;
 				}
@@ -122,13 +121,13 @@ final public class TaskQueue {
 					Client clnt = agent.ping();
 					if(clnt == null) {
 						LOG.error("Ping of online client failed, skipping: " + c);
-						c.setState(ClientState.OFFLINE);
+						c.setState(Client.State.OFFLINE);
 						ds.saveClient(c);
 						continue;
 					}
 					clnt.setHost(c.getHost());
 					clnt.setPort(c.getPort());
-					clnt.setState(ClientState.ONLINE);
+					clnt.setState(Client.State.ONLINE);
 					ds.saveClient(clnt);
 					c = clnt;
 					if(!CronUtils.matches(c.getSchedule())) {

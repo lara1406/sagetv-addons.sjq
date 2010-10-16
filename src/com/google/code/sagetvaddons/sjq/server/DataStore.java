@@ -15,8 +15,6 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
-import gkusnick.sagetv.api.API;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -36,6 +34,9 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+
+import sagex.api.Configuration;
+import sagex.api.Global;
 
 import com.google.code.sagetvaddons.sjq.server.TaskQueue.PendingTask;
 import com.google.code.sagetvaddons.sjq.shared.Client;
@@ -72,8 +73,7 @@ public final class DataStore {
 	}
 
 	static private final String SQL_ERROR = "SQL Error";
-	static private final String JDBC_URL= "jdbc:h2:tcp://" + API.apiNullUI.global.GetServerAddress() + ":" + API.apiNullUI.configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
-	//static private final String JDBC_URL= "jdbc:h2:tcp://192.168.1.11:9092/plugins/sjq/sjq4";
+	static private final String JDBC_URL= "jdbc:h2:tcp://" + Global.GetServerAddress() + ":" + Configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
 	static private final String READ_SETTING = "ReadSetting";
 	static private final String READ_CLIENT = "ReadClient";
 	static private final String READ_ALL_CLIENTS = "ReadAllClnts";
@@ -141,7 +141,7 @@ public final class DataStore {
 		qry = String.format("CREATE TABLE IF NOT EXISTS client (host VARCHAR(512) NOT NULL, port INTEGER NOT NULL, state VARCHAR(64) NOT NULL DEFAULT '%s', schedule VARCHAR(128) NOT NULL DEFAULT '%s', last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_resources TINYINT NOT NULL DEFAULT %d, PRIMARY KEY(host, port), " +
 				"CONSTRAINT IF NOT EXISTS port_gt_zero__client CHECK port > 0, " +
 				"CONSTRAINT IF NOT EXISTS host_not_empty__client CHECK LENGTH(host) > 0, " +
-				"CONSTRAINT IF NOT EXISTS total_res_ge_zero__client CHECK total_resources >= 0)", Client.ClientState.OFFLINE.toString(), Client.DEFAULT_SCHED, Client.DEFAULT_RESOURCES);
+				"CONSTRAINT IF NOT EXISTS total_res_ge_zero__client CHECK total_resources >= 0)", Client.State.OFFLINE.toString(), Client.DEFAULT_SCHED, Client.DEFAULT_RESOURCES);
 		s.executeUpdate(qry);
 
 		qry = String.format("CREATE TABLE IF NOT EXISTS client_tasks (id VARCHAR(128) NOT NULL, host VARCHAR(512) NOT NULL, port INT NOT NULL, reqd_resources TINYINT NOT NULL DEFAULT %d, max_instances TINYINT NOT NULL DEFAULT %d, schedule VARCHAR(256) NOT NULL DEFAULT '%s', exe VARCHAR(255) NOT NULL, args VARCHAR(7936) NOT NULL DEFAULT '', max_time INT NOT NULL DEFAULT %d, max_time_ratio REAL NOT NULL DEFAULT %f, min_rc SMALLINT NOT NULL DEFAULT %d, max_rc SMALLINT NOT NULL DEFAULT %d, test VARCHAR(255), test_args VARCHAR(7936) NOT NULL DEFAULT '', " +
@@ -634,7 +634,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			if(rs.next()) {
-				Client c = new Client(host, port, 0, rs.getString(2), Client.ClientState.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port));
+				Client c = new Client(host, port, 0, rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port));
 				c.setFreeResources(getFreeResources(c));
 				return c;
 			}

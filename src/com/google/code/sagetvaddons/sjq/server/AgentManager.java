@@ -41,13 +41,13 @@ public final class AgentManager extends TimerTask {
 			try {
 				agent = new AgentClient(c);
 				clnt = agent.ping();
-				c.setState(Client.ClientState.ONLINE);
+				c.setState(Client.State.ONLINE);
 				c.setMaxResources(clnt.getMaxResources());
 				c.setTasks(clnt.getTasks());
 				c.setSchedule(clnt.getSchedule());
 			} catch (IOException e) {
 				LOG.warn("IO error with client '" + c.getHost() + ":" + c.getPort() + "'; marking OFFLINE!", e);
-				c.setState(Client.ClientState.OFFLINE);
+				c.setState(Client.State.OFFLINE);
 			} finally {
 				if(agent != null)
 					agent.close();

@@ -10,5 +10,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/SageObjectMetadataFactory"/>
 	<classpathentry kind="var" path="SAGELIB/cron4j-2.2.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SJQv4Listener"/>
+	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
