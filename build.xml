@@ -129,14 +129,14 @@
   	<delete dir="app_plugin" failonerror="false" />
   	<property name="app_base" value="app_plugin/plugins/sjq" />
     <mkdir dir="${app_base}" />
-  	<filelist id="bins" dir="." files="sjq.log4j.properties,sjq4.properties" />
+  	<filelist id="bins" dir="." files="crontab.ref,sjq.log4j.properties,sjq4.properties" />
   	<copy todir="${app_base}">
   	  <filelist refid="bins" />
   	</copy>
   	<zip destfile="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" basedir="." includes="sjq.jar" />
   	<checksum file="sjq-jar-${app.ver}.${revision.max-with-flags}.zip" property="bin.jar.md5" />
   	<replace file="sjq.plugin.xml" token="@@JAR_MD5@@" value="${bin.jar.md5}" />
-  	<zip destfile="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" includes="**/*.properties" />
+  	<zip destfile="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" basedir="app_plugin" includes="**/*.properties,**/*.ref" />
   	<checksum file="sjq-conf-${app.ver}.${revision.max-with-flags}.zip" property="bin.conf.md5" />
   	<replace file="sjq.plugin.xml" token="@@CONF_MD5@@" value="${bin.conf.md5}" />
   </target>

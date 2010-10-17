@@ -1,0 +1,41 @@
+# This is the reference crontab file for SJQv4
+#
+# THIS FILE IS NOT USED BY SJQv4!  Edit the crontab file.
+#
+# Use the crontab file to schedule arbitrary tasks in the SJQv4 task queue
+#
+# The format of this file is as follows:
+#
+# min hr day mth dow taskId [var=val ...]
+#
+# The first five fields are the date/time fields and are used to decide when
+# to add the given task to the queue.  The details on the format of these
+# fields can be found at the following URL:
+#
+# http://www.sauronsoftware.it/projects/cron4j/api/it/sauronsoftware/cron4j/SchedulingPattern.html
+#
+# The taskId is the SJQv4 task id to add to the queue if the schedule pattern
+# matches.  The remaining options are var/value pairs separated by '=' and will
+# be included as environment variables in the task execution environment.
+# Environment pairs CANNOT have spaces in them.  The var nor the val can
+# contain spaces nor can there be any spaces between the = char otherwise things
+# will not work as expected.
+
+# EXAMPLES
+
+# Schedule the REBOOT task to run Sundays at 4pm; presumably the REBOOT task
+# checks to make sure that it's "safe" to reboot your system then does it if
+# it is.  "Safe" is subjective, but could mean no recordings in progress, no
+# clients connected, etc.
+0 16 * * sun REBOOT
+
+# Schedule the ARCHIVER task to run every 6 hours on the 30s (12:30am, 6:30am,
+# 12:30pm, 6:30pm); this task probably scans your recordings and finds ones
+# that you want to archive and then archives them for you.
+30 */6 * * * ARCHIVER
+
+# Schedule the MONTHLYTASK task to run on the first day of each month at 6:15am
+# This task also includes environment variables; the env vars 'x' (with value
+# '1234') and 'z' (with value 'abc') will be available in the task's execution
+# environment
+15 6 1 * * MONTHLYTASK x=1234 z=abc

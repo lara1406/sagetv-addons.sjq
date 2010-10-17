@@ -15,10 +15,15 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import it.sauronsoftware.cron4j.Scheduler;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -29,14 +34,26 @@ import com.google.code.sagetvaddons.sjq.listener.Listener;
 
 public final class Plugin implements SageTVPlugin {
 	static private final Logger LOG = Logger.getLogger(Plugin.class);
-
+	static public final File CRONTAB = new File("plugins/sjq/crontab");
+	
 	private Timer timer;
 	private Thread agent;
+	private Scheduler crontab;
 	
 	public Plugin(SageTVPluginRegistry reg) {
 		PropertyConfigurator.configure("plugins/sjq/sjq.log4j.properties");
 		timer = null;
 		agent = null;
+		if(!CRONTAB.exists()) {
+			try {
+				FileUtils.touch(CRONTAB);
+			} catch (IOException e) {
+				LOG.error("Unable to create crontab file!", e);
+			}
+		}
+		crontab = new Scheduler();
+		crontab.setDaemon(true);
+		crontab.addTaskCollector(new CronTaskCollector());
 	}
 	
 	@Override
@@ -119,6 +136,7 @@ public final class Plugin implements SageTVPlugin {
 			
 		}, 15000, 30000);
 		timer.schedule(new AgentManager(), 15000, 120000);
+		LOG.info("SJQ timer thread has been started!");
 		
 		if(agent != null)
 			agent.interrupt();
@@ -127,15 +145,19 @@ public final class Plugin implements SageTVPlugin {
 			public void run() {
 				try {
 					Thread.sleep(5500);
-					LOG.info("Starting server agent...");
 					new Listener("com.google.code.sagetvaddons.sjq.server.commands", Config.get().getPort()).init();
-					LOG.warn("Server agent has stopped!");
+					LOG.warn("SJQ server agent has stopped!");
 				} catch (Exception e) {
-					LOG.fatal("Server agent has stopped unexpectedly!", e);
+					LOG.fatal("SJQ server agent has stopped unexpectedly!", e);
 				}
 			}
 		};
 		agent.start();
+		LOG.info("Server agent has started!");
+		
+		if(!crontab.isStarted())
+			crontab.start();
+		LOG.info("Server crontab has started!");
 	}
 
 	@Override
@@ -143,10 +165,17 @@ public final class Plugin implements SageTVPlugin {
 		if(timer != null) {
 			timer.cancel();
 			timer = null;
+			LOG.info("SJQ timer thread has been stopped!");
 		}
 		if(agent != null) {
 			agent.interrupt();
 			agent = null;
+			LOG.info("SJQ server agent has been stopped!");
+		}
+		if(crontab.isStarted()) {
+			LOG.info("Stopping SJQ crontab...");
+			crontab.stop();
+			LOG.info("SJQ crontab has been stopped!");
 		}
 	}
 
