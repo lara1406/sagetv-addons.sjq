@@ -30,13 +30,39 @@ import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
 
+/**
+ * <p>A thread-safe reader/writer of the SJQv4 TaskQueue</p>
+ * <p>This class provides thread-safe access to the SJQv4 task queue.  Within the SJQ server
+ * code, this is the class to use for manipulating the task queue.  <b>Other JVMs cannot use this
+ * class to manipulate the task queue as it does not synchrnoize across processes!</b>  If you're 
+ * trying to manipulate the task queue in another JVM, perhaps from a task client, then you must use
+ * the {@link com.google.code.sagetvaddons.sjq.taskqueue.ServerClient} class, which interacts with the
+ * task queue through a socket connection, which is properly synchronized across multiple processes.</p>
+ * <p><b>If you interact with the task queue via this class in an external JVM then all bets are off - 
+ * weird, unexpected things are probably going to happen to your task queue!</b></p>
+ * <p>Eventually I'll come back and remove the public access to this class, but for now it's too
+ * convenient for me instead of forcing the app itself to also go through the socket server.</p>
+ * @author dbattams
+ * @version $Id$
+ */
 final public class TaskQueue {
 	static private final Logger LOG = Logger.getLogger(TaskQueue.class);
 	
 	static private final TaskQueue INSTANCE = new TaskQueue();
-	static final public TaskQueue get() { return INSTANCE; }
 	
-	static final public class PendingTask {
+	/**
+	 * <p>Return the TaskQueue singleton</p>
+	 * <p><b>This class should only be used within the same JVM the SJQv4 server is running in!</b></p>
+	 * @return The TaskQueue singleton
+	 */
+	static final public TaskQueue get() { return INSTANCE; }
+
+	/**
+	 * Details about a pending task; a task is Pending when it's in WAITING or RETURNED state
+	 * @author dbattams
+	 *
+	 */
+	static final class PendingTask {
 		private long qId;
 		private String taskId;
 		private Date created;
@@ -94,6 +120,13 @@ final public class TaskQueue {
 		
 	}
 	
+	/**
+	 * Add a new task to the queue
+	 * @param id The task id to be added to the queue
+	 * @param metadata The var/val pairs of environment variables to inject into this task's runtime env
+	 * @return The new task queue id for the created task
+	 * @throws IOException Thrown if there was an error adding the task to the queue
+	 */
 	synchronized public long addTask(String id, Map<String, String> metadata) throws IOException {
 		try {
 			return DataStore.get().addTask(id, metadata);
@@ -102,6 +135,9 @@ final public class TaskQueue {
 		}
 	}
 	
+	/**
+	 * Attempt to assign all pending tasks to a client; tasks that can't be assigned are simply left alone
+	 */
 	synchronized void startTasks() {
 		DataStore ds = DataStore.get();
 		Config cfg = Config.get();
@@ -174,7 +210,12 @@ final public class TaskQueue {
 				LOG.warn("No clients available to accept task of type '" + t.getTaskId() + "'");
 		}
 	}
-	
+
+	/**
+	 * Update a task in the queue; all fields of the object are saved to the data store
+	 * @param qt The task to be updated
+	 * @return True if the save was successful or false on any error
+	 */
 	synchronized public boolean updateTask(QueuedTask qt) {
 		return DataStore.get().updateTask(qt);
 	}	

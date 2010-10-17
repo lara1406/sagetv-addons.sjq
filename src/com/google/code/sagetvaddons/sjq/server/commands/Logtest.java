@@ -25,8 +25,14 @@ import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 
 /**
+ * <p>Provides the ability to log test output for an executed task</p>
+ * <p><pre>
+ *    R: QueuedTask
+ *    R: String (log data)
+ *    W: ACK + qId
+ * </pre></p>
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class Logtest extends Command {
 

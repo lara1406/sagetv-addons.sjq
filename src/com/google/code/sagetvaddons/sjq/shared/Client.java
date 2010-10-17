@@ -19,8 +19,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
+ * Represents a task client
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class Client implements Serializable {
 	/**
@@ -29,16 +30,33 @@ public final class Client implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
+	 * Represents the valid state a task client can be in
 	 * @author dbattams
 	 *
 	 */
 	static public enum State {
+		/**
+		 * The task client is online and ready to response to requests from the server
+		 */
 		ONLINE,
+		/**
+		 * The task client failed to respond to the last ping from the server
+		 */
 		OFFLINE,
+		/**
+		 * Not currently used
+		 */
 		DISABLED
 	}
 
+	/**
+	 * The default number of resources for a task client
+	 */
 	static public int DEFAULT_RESOURCES = 100;
+	
+	/**
+	 * The default active schedule for a task client; this value means the task client is always enabled; see the crontab docs for more details
+	 */
 	static public String DEFAULT_SCHED = "* * * * *";
 	
 	private String host;
@@ -51,11 +69,22 @@ public final class Client implements Serializable {
 	private Task[] tasks;
 	
 	/**
-	 * 
+	 * Default constructor
 	 */
 	public Client() {
 	}
 
+	/**
+	 * Constructor
+	 * @param host The hostname this task client is reachable at
+	 * @param port The port number the task client's agent is listening on
+	 * @param freeResources The number of free resources currently available on this client
+	 * @param schedule The client's ACTIVE schedule; crontab format
+	 * @param state The current state of this client
+	 * @param lastUpdate The last time this client was updated
+	 * @param maxResources The max number of resources for this client
+	 * @param tasks The array of tasks this client is capable of running
+	 */
 	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks) {
 		this.host = host;
 		this.freeResources = freeResources;
@@ -186,6 +215,11 @@ public final class Client implements Serializable {
 		this.tasks = tasks;
 	}
 	
+	/**
+	 * Determine if this client can run tasks of the given type
+	 * @param taskId The type of task to check
+	 * @return True if this client can run tasks of type 'taskId' or false otherwise
+	 */
 	public boolean handlesTask(String taskId) {
 		for(Task t : tasks)
 			if(t.getId().equals(taskId))
@@ -193,6 +227,11 @@ public final class Client implements Serializable {
 		return false;
 	}
 	
+	/**
+	 * Get the task for the given taskId
+	 * @param taskId The task id to query
+	 * @return The Task definition for the given task id on this client or null if this client cannot run tasks of type 'taskId'
+	 */
 	public Task getTask(String taskId) {
 		for(Task t : tasks)
 			if(t.getId().equals(taskId))

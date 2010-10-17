@@ -28,17 +28,18 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 
 /**
+ * Provides synchronized access to the task queue across JVMs via sockets
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class ServerClient extends ListenerClient {
 	
 	private DataStore datastore;
 	
 	/**
-	 * @param host
-	 * @param port
-	 * @throws IOException
+	 * <p>Constructor; will connect to the SJQ server running on the SageTV server this app is associated with</p>
+	 * <p>If called outside the Sage JVM then it is expected that the sagex-api RMI provider has been properly configured before calling this constructor</p>
+	 * @throws IOException If there was an error making the socket connection to the SJQ server
 	 */
 	public ServerClient() throws IOException {
 		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")));
@@ -53,14 +54,21 @@ public final class ServerClient extends ListenerClient {
 			super.finalize();
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		if(datastore != null)
 			datastore.close();
 		super.close();
 	}
-	
+
+	/**
+	 * Add a new task to the task queue
+	 * @param taskId The task id to be added
+	 * @param env The map of env vars to be attached to the task's runtime env; can be empty, but not null
+	 * @return The task queue id assigned to the newly inserted task
+	 * @throws IOException Thrown if there was an error adding the task to the task queue
+	 */
 	public long addTask(String taskId, Map<String, String> env) throws IOException {
 		NetworkAck ack = null;
 		ack = sendCmd("ADDTASK");
@@ -76,18 +84,37 @@ public final class ServerClient extends ListenerClient {
 			throw new IOException("ADDTASK command rejected by server!");
 	}
 	
+	/**
+	 * Get the list of active tasks in the queue; a task is active if it's in WAITING, RETURNED or RUNNING state
+	 * @return The array of active tasks; can be empty in case of error, but never null
+	 */
 	public QueuedTask[] getActiveQueue() {
 		return datastore.getActiveQueue();
 	}
 	
+	/**
+	 * Get all the registered clients
+	 * @return The array of registered task clients
+	 */
 	public Client[] getAllClients() {
 		return datastore.getAllClients();
 	}
 	
+	/**
+	 * Get a client by host/port
+	 * @param host The hostname of the client to get
+	 * @param port The port the client is listening on
+	 * @return The Client or null if the client is not registered
+	 */
 	public Client getClient(String host, int port) {
 		return datastore.getClient(host, port);
 	}
 	
+	/**
+	 * Register a new task client or update an existing client
+	 * @param clnt The client to register/update
+	 * @return True if the registration/update succeeded or false otherwise
+	 */
 	public boolean saveClient(Client clnt) {
 		return datastore.saveClient(clnt);
 	}

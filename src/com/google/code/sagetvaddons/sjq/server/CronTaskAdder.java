@@ -24,8 +24,9 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
+ * A cron4j Task that adds a new SJQv4 Task to the SJQv4 TaskQueue
  * @author dbattams
- *
+ * @version $Id$
  */
 final class CronTaskAdder extends Task {
 	static private final Logger LOG = Logger.getLogger(CronTaskAdder.class);
@@ -34,7 +35,9 @@ final class CronTaskAdder extends Task {
 	private Map<String, String> env;
 	
 	/**
-	 * 
+	 * Constructor
+	 * @param taskId The task id to be added to the queue
+	 * @param env The environment variables to be included in the task's execution env; can be an empty map, but CANNOT be null
 	 */
 	public CronTaskAdder(String taskId, Map<String, String> env) {
 		this.taskId = taskId;

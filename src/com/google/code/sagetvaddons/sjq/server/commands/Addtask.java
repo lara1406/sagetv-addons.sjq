@@ -25,8 +25,14 @@ import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.server.TaskQueue;
 
 /**
+ * <p>Provides the ability to add a new task to the task queue via the tcp socket</p>
+ * <p><pre>
+ *    R: Map<String, String> (env)
+ *    R: String (taskId)
+ *    W: ACK + qId
+ * </pre></p>
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class Addtask extends Command {
 

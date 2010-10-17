@@ -32,14 +32,26 @@ import sage.SageTVPluginRegistry;
 
 import com.google.code.sagetvaddons.sjq.listener.Listener;
 
+/**
+ * SageTVPlugin implementation for SJQv4
+ * @author dbattams
+ * @version $Id$
+ */
 public final class Plugin implements SageTVPlugin {
 	static private final Logger LOG = Logger.getLogger(Plugin.class);
+	/**
+	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
+	 */
 	static public final File CRONTAB = new File("plugins/sjq/crontab");
 	
 	private Timer timer;
 	private Thread agent;
 	private Scheduler crontab;
 	
+	/**
+	 * Constructor
+	 * @param reg The plugin registry
+	 */
 	public Plugin(SageTVPluginRegistry reg) {
 		PropertyConfigurator.configure("plugins/sjq/sjq.log4j.properties");
 		timer = null;
@@ -124,6 +136,7 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
+		// Create the timer thread, which will run the agent pinger and the task queue threads periodically
 		if(timer != null)
 			timer.cancel();
 		timer = new Timer(true);
@@ -138,6 +151,7 @@ public final class Plugin implements SageTVPlugin {
 		timer.schedule(new AgentManager(), 15000, 120000);
 		LOG.info("SJQ timer thread has been started!");
 		
+		// Start the server agent
 		if(agent != null)
 			agent.interrupt();
 		agent = new Thread() {
@@ -155,6 +169,7 @@ public final class Plugin implements SageTVPlugin {
 		agent.start();
 		LOG.info("Server agent has started!");
 		
+		// Start the crontab
 		if(!crontab.isStarted())
 			crontab.start();
 		LOG.info("Server crontab has started!");
@@ -162,6 +177,7 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void stop() {
+		// Kill everything we started in start()
 		if(timer != null) {
 			timer.cancel();
 			timer = null;

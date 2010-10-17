@@ -25,8 +25,13 @@ import com.google.code.sagetvaddons.sjq.server.TaskQueue;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 
 /**
+ * <p>Provides the ability to update a QueuedTask in the data store</p>
+ * <p><pre>
+ *    R: QueuedTask
+ *    W: ACK
+ * </pre></p>
  * @author dbattams
- *
+ * @version $Id$
  */
 public class Update extends Command {
 

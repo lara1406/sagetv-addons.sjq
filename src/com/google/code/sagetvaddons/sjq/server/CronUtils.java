@@ -17,8 +17,18 @@ package com.google.code.sagetvaddons.sjq.server;
 
 import it.sauronsoftware.cron4j.SchedulingPattern;
 
+/**
+ * Utility class that allows easy testing of Client and Task schedules
+ * @author dbattams
+ * @version $Id$
+ */
 final class CronUtils {
 
+	/**
+	 * Test a given scheduling pattern against the current system time
+	 * @param pattern The pattern to test
+	 * @return True if the given pattern matches the current time or false otherwise; an invalid pattern will also return false
+	 */
 	static boolean matches(String pattern) {
 		return SchedulingPattern.validate(pattern) && new SchedulingPattern(pattern).match(System.currentTimeMillis());
 	}

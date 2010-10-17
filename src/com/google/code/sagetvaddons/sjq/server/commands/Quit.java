@@ -23,8 +23,12 @@ import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 
 /**
+ * <p>Acknowledges the client wants to end this session</p>
+ * <p><pre>
+ *    W: ACK
+ * </pre></p>
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class Quit extends Command {
 

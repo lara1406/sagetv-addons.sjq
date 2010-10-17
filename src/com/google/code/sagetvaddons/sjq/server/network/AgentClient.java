@@ -25,13 +25,27 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
 
+/**
+ * Provide a connection to a task client agent; allow execution of commands on the task client
+ * @author dbattams
+ * @version $Id$
+ */
 public final class AgentClient extends ListenerClient {
 	static private final Logger LOG = Logger.getLogger(AgentClient.class);
 
+	/**
+	 * Construcotr
+	 * @param clnt The task client to connect to
+	 * @throws IOException If there is any error connecting to the given task client
+	 */
 	public AgentClient(Client clnt) throws IOException {
 		super(clnt.getHost(), clnt.getPort());
 	}
 
+	/**
+	 * Ping the task client; returns an updated Client instance as provided by the task client
+	 * @return The current state of the task client or null if the ping failed
+	 */
 	public Client ping() {
 		NetworkAck ack = null;
 		Client c = null;
@@ -53,6 +67,11 @@ public final class AgentClient extends ListenerClient {
 		return c;
 	}
 	
+	/**
+	 * Assign the given task to the task client
+	 * @param qt The Task to assign to the client
+	 * @return The state of the task, which should be RUNNING if successfully started by the task client
+	 */
 	public State exe(QueuedTask qt) {
 		NetworkAck ack = null;
 		try {

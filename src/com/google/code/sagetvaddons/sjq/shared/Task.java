@@ -17,6 +17,11 @@ package com.google.code.sagetvaddons.sjq.shared;
 
 import java.io.Serializable;
 
+/**
+ * A Task represents a unit of work to be performed
+ * @author dbattams
+ * @version $Id$
+ */
 public class Task implements Serializable {
 	
 	/**
@@ -24,16 +29,49 @@ public class Task implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	/**
+	 * The default task id
+	 */
 	static public final String DEFAULT_ID = null;
+	/**
+	 * The default number of resources required to perform a task
+	 */
 	static public final int DEFAULT_REQ_RES = 100;
+	/**
+	 * The default max number of instances of a task that can run in parallel on a single task client
+	 */
 	static public final int DEFAULT_MAX_INST = 1;
+	/**
+	 * The default task schedule, in crontab format; this value means that the task is always enabled
+	 */
 	static public final String DEFAULT_SCHED = "* * * * *";
+	/**
+	 * The default exe name for a task
+	 */
 	static public final String DEFAULT_EXE = null;
+	/**
+	 * The default exe command line args
+	 */
 	static public final String DEFAULT_EXE_ARGS = "";
+	/**
+	 * The default max execution time for a task, in seconds
+	 */
 	static public final long DEFAULT_MAX_TIME = 86400L;
+	/**
+	 * Not implemented
+	 */
 	static public final float DEFAULT_MAX_TIME_RATIO = 1.0F;
+	/**
+	 * The default minimum successful return code for the exe
+	 */
 	static public final int DEFAULT_MIN_RC = 0;
-	static public final int DEFAULT_MAX_RC = 0;
+	/**
+	 * The default maximum successful return code for the exe
+	 */
+	static public final int DEFAULT_MAX_RC = DEFAULT_MIN_RC;
+	/**
+	 * The default test script for a task
+	 */
 	static public final String DEFAULT_TEST = null;
 	
 	private String id;
@@ -49,6 +87,9 @@ public class Task implements Serializable {
 	private String test;
 	private String testArgs;
 	
+	/**
+	 * Default constructor; set state to default values
+	 */
 	public Task() {
 		id = DEFAULT_ID;
 		requiredResources = DEFAULT_REQ_RES;
@@ -65,16 +106,19 @@ public class Task implements Serializable {
 	}
 	
 	/**
-	 * @param id
-	 * @param requiredResources
-	 * @param maxInstances
-	 * @param schedule
-	 * @param executable
-	 * @param exeArguments
-	 * @param maxTime
-	 * @param maxTimeRatio
-	 * @param minReturnCode
-	 * @param maxReturnCode
+	 * Constructor
+	 * @param id The task id
+	 * @param requiredResources The number of resources required to run this task
+	 * @param maxInstances The max instances of this task that can run in parallel
+	 * @param schedule The task ENABLED schedule; crontab format
+	 * @param executable The exe path; relative paths are relative to the base install dir of task client
+	 * @param exeArguments The command line args for the exe
+	 * @param maxTime The maximum number of seconds to run this task
+	 * @param maxTimeRatio Not implemented; just pass 1.0
+	 * @param minReturnCode The min successful return code for the exe
+	 * @param maxReturnCode The max successful return code for the exe
+	 * @param testExe The path of the pretest script to execute or null if one shouldn't be run
+	 * @param testArgs Test args to pass to the pretest script
 	 */
 	public Task(String id, int requiredResources, int maxInstances,
 			String schedule, String executable, String exeArguments,

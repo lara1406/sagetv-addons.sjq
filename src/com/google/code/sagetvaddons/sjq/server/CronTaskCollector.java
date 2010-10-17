@@ -28,18 +28,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 /**
+ * A concrete cron4j TaskCollector; this collector reads and processees the SJQv4 crontab file
  * @author dbattams
- *
+ * @version $Id$
  */
 final class CronTaskCollector implements TaskCollector {
 	static private final Logger LOG = Logger.getLogger(CronTaskCollector.class);
-	
-	/**
-	 * 
-	 */
-	public CronTaskCollector() {
-		// TODO Auto-generated constructor stub
-	}
 
 	/* (non-Javadoc)
 	 * @see it.sauronsoftware.cron4j.TaskCollector#getTasks()

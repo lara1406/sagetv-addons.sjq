@@ -25,12 +25,17 @@ import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 
 /**
+ * <p>A TimerTask that attempts to ping all registered task client agents and update their status</p>
+ * <p>The plugin should register an instance of this class in a java.util.Timer to run periodically.</p>
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class AgentManager extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(AgentManager.class);
 	
+	/**
+	 * Perform the task; attempt to ping all registered task client agents
+	 */
 	@Override
 	public void run() {
 		DataStore ds = DataStore.get();

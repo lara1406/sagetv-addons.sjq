@@ -45,8 +45,9 @@ import com.google.code.sagetvaddons.sjq.shared.Task;
 
 
 /**
+ * The SJQv4 DataStore houses the task queue, task client info, and task logs
  * @author dbattams
- *
+ * @version $Id$
  */
 public final class DataStore {
 	static private final Logger LOG = Logger.getLogger(DataStore.class);
@@ -64,6 +65,14 @@ public final class DataStore {
 		}
 	};
 
+	/**
+	 * <p>Get a valid, initiated connection to the SJQv4 DataStore.</p>
+	 * <p>The returned DataStore instance is automatically connected to the appropriate
+	 * SageTV server regardless of whether this is invoked on the server or a PC client.
+	 * If called outside of a SageTV JVM then it is assumed that your sagex-api RMI provider
+	 * has been appropriately configured to the SageTV server.</p>
+	 * @return The DataStore connection or null in case of error
+	 */
 	static public final DataStore get() {
 		DataStore ds = POOL.get();
 		int retries = 5;
@@ -72,8 +81,9 @@ public final class DataStore {
 		return ds;
 	}
 
-	static private final String SQL_ERROR = "SQL Error";
+	// The JDBC_URL is build using the Sage APIs
 	static private final String JDBC_URL= "jdbc:h2:tcp://" + Global.GetServerAddress() + ":" + Configuration.GetServerProperty("h2/tcp_port", "9092") + "/plugins/sjq/sjq4";
+	static private final String SQL_ERROR = "SQL Error";
 	static private final String READ_SETTING = "ReadSetting";
 	static private final String READ_CLIENT = "ReadClient";
 	static private final String READ_ALL_CLIENTS = "ReadAllClnts";
@@ -123,6 +133,9 @@ public final class DataStore {
 		prepStatements();
 	}
 
+	/**
+	 * Extend the finalizer to also close the database connection
+	 */
 	@Override
 	protected void finalize() {
 		try {
@@ -132,6 +145,7 @@ public final class DataStore {
 		}		
 	}
 
+	// Create the DB tables and view, if they don't exist
 	private void initDb() throws SQLException {
 		Statement s = conn.createStatement();
 		String qry = "CREATE TABLE IF NOT EXISTS settings (var VARCHAR(128) NOT NULL PRIMARY KEY, val LONGVARCHAR, " +
@@ -197,10 +211,12 @@ public final class DataStore {
 		s.close();
 	}
 
+	// Upgrade the DB schema, as necessary
 	private void upgradeDb() {
 		return;
 	}
 
+	// Prep the various SQL statements used in the DataStore
 	private void prepStatements() throws SQLException {
 		stmts = new HashMap<String, PreparedStatement>();
 
@@ -272,7 +288,7 @@ public final class DataStore {
 	 * <p>Determine if this data store connection is still in a valid state (i.e. it's still connected to the database server)</p>
 	 * 
 	 * <p>If isValid() returns false then the data store connection is removed from the thread local storage such that the next
-	 * call to getInstance() will return a new, freshly initiated data store connection for use.</p>
+	 * call to get() will return a new, freshly initiated data store connection for use.</p>
 	 * @return True if the connection is still valid or false otherwise
 	 */
 	public boolean isValid() {
@@ -288,6 +304,10 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Get the current schema version for the database.
+	 * @return The current schema version; -1 is returned if the schema is not set (i.e. a new DB file)
+	 */
 	public int getSchema() {
 		PreparedStatement stmt = stmts.get(READ_SETTING);
 		ResultSet rs = null;
@@ -310,10 +330,21 @@ public final class DataStore {
 		}	
 	}
 
+	/**
+	 * Get all the configured Tasks for the given Client
+	 * @param c The client to lookup
+	 * @return An array of Tasks the given client is configured to handle; the array may be empty in case of error, but never null
+	 */
 	Task[] getTasksForClient(Client c) {
 		return getTasksForClient(c.getHost(), c.getPort());
 	}
 	
+	/**
+	 * Get all the configured Tasks for a Client, identified by host and port
+	 * @param host The Client's hostname
+	 * @param port The Client's port
+	 * @return An array of Tasks the given client is configured to handle; the array may be empty in case of error, but never null
+	 */
 	Task[] getTasksForClient(String host, int port) {
 		if(host == null || host.length() == 0 || port < 1)
 			throw new IllegalArgumentException("Client keys are invalid!");
@@ -335,7 +366,12 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
+	/**
+	 * Get an array of Clients capable of running the given task id
+	 * @param taskId The task id of interest
+	 * @return An array of clients capable of running 'taskId' tasks; the array may be empty, but never null
+	 */
 	Client[] getClientsForTask(String taskId) {
 		PreparedStatement pStmt = stmts.get(CLIENT_FOR_TASK);
 		ResultSet rs = null;
@@ -354,7 +390,12 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
+	/**
+	 * <p>Return an array of active tasks.</p>
+	 * <p>Active tasks are tasks that are assigned to a client and are running or tasks that are waiting to be assigned.</p>
+	 * @return An array of QueuedTasks representing all tasks in the queue that are running or waiting to be assigned to a client
+	 */
 	public QueuedTask[] getActiveQueue() {
 		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
 		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port) WHERE state NOT IN ('COMPLETED', 'FAILED', 'SKIPPED')";
@@ -381,6 +422,10 @@ public final class DataStore {
 		}
 	}
 	
+	/**
+	 * Get an array of tasks that are waiting to be assigned to a client
+	 * @return The array of pending tasks
+	 */
 	PendingTask[] getPendingTasks() {
 		String qry = "SELECT id, job_id, created FROM queue WHERE state = 'WAITING' OR state = 'RETURNED'";
 		Collection<PendingTask> tasks = new ArrayList<PendingTask>();
@@ -407,6 +452,11 @@ public final class DataStore {
 		}
 	}
 	
+	/**
+	 * Update a QueuedTask; all fields of the task are updated in the DataStore
+	 * @param qt The task to be updated
+	 * @return True on success or false if any error was encountered that prevented the data from being updated in the database
+	 */
 	boolean updateTask(QueuedTask qt) {
 		PreparedStatement pStmt = stmts.get(UPDATE_QUEUE);
 		try {
@@ -425,8 +475,17 @@ public final class DataStore {
 			return false;
 		}
 	}
-	
-	long addTask(String taskId, Map<String, String> metadataSrc) throws SQLException {
+
+	/**
+	 * <p>Add a new task to the queue.</p>
+	 * <p>The metadata map is a mapping of variables to values, each of which becomes an environment
+	 * variable in the task's runtime environment when the task is executed.</p>
+	 * @param taskId The task id type to be added
+	 * @param metadata The metadata to associte with the task; can be an empty map, but CANNOT be null
+	 * @return The unique task queue id number assigned to the newly created task
+	 * @throws SQLException Thrown if the task could not be added to the queue
+	 */
+	long addTask(String taskId, Map<String, String> metadata) throws SQLException {
 		taskId = taskId.toUpperCase();
 		boolean localTransaction = false;
 		try {
@@ -434,7 +493,7 @@ public final class DataStore {
 			if(localTransaction)
 				conn.setAutoCommit(false);
 			long qId = createTask(taskId);
-			setMetadata(qId, metadataSrc);
+			setMetadata(qId, metadata);
 			if(localTransaction)
 				conn.commit();
 			return qId;
@@ -448,6 +507,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Write the metadata to the database
 	private void setMetadata(long id, Map<String, String> data) throws SQLException {
 		PreparedStatement pStmt = stmts.get(DELETE_METADATA);
 		pStmt.setLong(1, id);
@@ -465,6 +525,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Add a new task entry to the queue table and return the unique id assigned to it
 	private long createTask(String taskId) throws SQLException {
 		PreparedStatement pStmt = stmts.get(ADD_TASK);
 		ResultSet rs = null;
@@ -482,6 +543,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Update the client tasks for the given Client; this should be ran each time a task client is pinged
 	private void updateClientTasks(Client clnt) throws SQLException {
 		PreparedStatement pStmt = stmts.get(WIPE_CLNT_TASKS);
 		pStmt.setString(1, clnt.getHost());
@@ -511,6 +573,13 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Log task output to the database
+	 * @param qt The task the log data is to be associated with
+	 * @param type The type of log output ('TASK' or 'TEST')
+	 * @param log The log contents to be stored
+	 * @return True if the log output was saved successfully or false otherwise
+	 */
 	public boolean logOutput(QueuedTask qt, String type, String log) {
 		ResultSet rs = null;
 		PreparedStatement pStmt = stmts.get(COUNT_LOG);
@@ -532,6 +601,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Private helper to append log output to an existing entry
 	private boolean updateLog(long id, String type, String log) {
 		PreparedStatement pStmt = stmts.get(READ_LOG);
 		ResultSet rs = null;
@@ -568,6 +638,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Private helper to create a new log entry for a task queue id
 	private boolean addLog(long id, String type, String log) {
 		PreparedStatement pStmt = stmts.get(ADD_LOG);
 		log = "===== " + new Date().toString() + " =====\n\n" + log.concat("\n\n==============================");
@@ -583,6 +654,11 @@ public final class DataStore {
 		}
 	}
 	
+	/**
+	 * Create a new Client or update an existing one; use this method to register new task clients with the server
+	 * @param clnt The client to be created or updated
+	 * @return True if the Client was saved/updated or false otherwise
+	 */
 	public boolean saveClient(Client clnt) {
 		if(getClient(clnt.getHost(), clnt.getPort()) != null)
 			return updateClient(clnt);
@@ -626,6 +702,12 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Retrieve a Client instance for the given host/port combination
+	 * @param host The hostname of the Client to retrieve
+	 * @param port The port number for the Client
+	 * @return The Client, if it's registered, or null if the given Client does not exist in the database
+	 */
 	public Client getClient(String host, int port) {
 		PreparedStatement pStmt = stmts.get(READ_CLIENT);
 		ResultSet rs = null;
@@ -648,6 +730,10 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Get an array of all registered task clients
+	 * @return The array of all registered task clients
+	 */
 	public Client[] getAllClients() {
 		PreparedStatement pStmt = stmts.get(READ_ALL_CLIENTS);
 		ResultSet rs = null;
@@ -663,6 +749,12 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Get a count of how many instances of taskId the given Client is currently executing
+	 * @param taskId The taskId to query
+	 * @param c The client to query
+	 * @return A count of the number of instances of taskId the Client, c, is currently running
+	 */
 	int getActiveInstances(String taskId, Client c) {
 		PreparedStatement pStmt = stmts.get(GET_ACTIVE_INSTS);
 		ResultSet rs = null;
@@ -681,6 +773,11 @@ public final class DataStore {
 		}
 	}
 	
+	/**
+	 * Get the metadata map for the given task queue id
+	 * @param id The unique task queue id to build the map for
+	 * @return A map of metadata for the given task id; may be an empty map, but never null
+	 */
 	Map<String, String> getMetadata(long id) {
 		PreparedStatement pStmt = stmts.get(GET_METADATA);
 		ResultSet rs = null;
@@ -701,6 +798,11 @@ public final class DataStore {
 		}
 	}
 	
+	/**
+	 * Get the free resource count for the given Client
+	 * @param c The client to check the free resource count for
+	 * @return The free resources available on the given Client, c
+	 */
 	int getFreeResources(Client c) {
 		PreparedStatement pStmt = stmts.get(GET_USED_RESOURCES);
 		ResultSet rs = null;
@@ -721,6 +823,7 @@ public final class DataStore {
 		}
 	}
 	
+	// Private helper that updates an existing client entry in the database
 	private boolean updateClient(Client clnt) {
 		PreparedStatement pStmt = stmts.get(UPDATE_CLIENT);
 		boolean localTransaction = false;
@@ -760,6 +863,10 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Close the connection to the DataStore; once closed you must call DataStore.get() to get a new
+	 * connection as this one will become invalid and will no longer function.
+	 */
 	public void close() {
 		for(PreparedStatement s : stmts.values())
 			if(s != null)
@@ -767,6 +874,6 @@ public final class DataStore {
 				stmts.clear();
 				if(conn != null)
 					try { conn.close(); } catch(SQLException e) { LOG.error(SQL_ERROR, e); }
-					POOL.remove();
+				POOL.remove();
 	}
 }

@@ -23,6 +23,11 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+/**
+ * A singleton implementation that stores all of the config options for the server plugin
+ * @author dbattams
+ * @version $Id$
+ */
 public final class Config {
 	static private final Logger LOG = Logger.getLogger(Config.class);
 	static private final String DEFAULT_PROPS = "plugins/sjq/sjq4.properties";
@@ -30,11 +35,22 @@ public final class Config {
 	static private final int DEFAULT_PORT = 23347;
 	
 	static private Config INSTANCE = null;
+	
+	/**
+	 * Get the Config singleton; load it from the given props file if it hasn't already been loaded
+	 * @param propsPath The props file to read the settings from; only used if not previously created
+	 * @return The Config singleton
+	 */
 	static public final Config get(String propsPath) {
 		if(INSTANCE == null)
 			INSTANCE = new Config(propsPath);
 		return INSTANCE; 
 	}
+	
+	/**
+	 * Get the Config singleton; create it from the default props file if it hasn't been loaded yet
+	 * @return The Config singleton
+	 */
 	static public final Config get() {
 		return get(DEFAULT_PROPS);
 	}
@@ -81,6 +97,7 @@ public final class Config {
 		}
 	}
 	/**
+	 * Returns the port that the server agent is listening on
 	 * @return the port
 	 */
 	public int getPort() {
