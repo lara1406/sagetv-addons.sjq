@@ -105,6 +105,8 @@ public final class DataStore {
 	static private final String ADD_LOG = "AddLog";
 	static private final String READ_LOG = "ReadLog";
 	static private final String READ_CLNT_TASKS = "ReadClntTasks";
+	static private final String DELETE_SETTING = "DelSetting";
+	static private final String SAVE_SETTING = "SaveSetting";
 	
 	static private boolean dbInitialized = false;
 
@@ -282,6 +284,12 @@ public final class DataStore {
 		
 		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ?";
 		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
+		
+		qry = "DELETE FROM settings WHERE var = ?";
+		stmts.put(DELETE_SETTING, conn.prepareStatement(qry));
+		
+		qry = "INSERT INTO settings (var, val) VALUES (?, ?)";
+		stmts.put(SAVE_SETTING, conn.prepareStatement(qry));
 	}
 
 	/**
@@ -863,6 +871,76 @@ public final class DataStore {
 		}
 	}
 
+	/**
+	 * Retrive a setting from the SJQv4 registry
+	 * @param var The name of the setting to retrieve
+	 * @return The value of the setting or null if the setting does not exist in the registry
+	 * @throws IllegalArgumentException Thrown if var = 'schema'; you cannot read the schema this way; use getSchema() instead
+	 */
+	public String getSetting(String var) {
+		return getSetting(var, null);
+	}
+
+	/**
+	 * Retrieve a setting from the SJQv4 registry
+	 * @param var The name of the setting to retrieve
+	 * @param defaultVal The default value to return if the setting does not exist in the registry
+	 * @return The value of the setting or defaultVal if the setting does not exist
+	 * @throws IllegalArgumentException Thrown if var = 'schema'; you cannot read the schema this way; use getSchema() instead
+	 */
+	public String getSetting(String var, String defaultVal) {
+		if("schema".equals(var))
+			throw new IllegalArgumentException("Cannot access schema setting via getSetting()");
+		PreparedStatement pStmt = stmts.get(READ_SETTING);
+		ResultSet rs = null;
+		try {
+			pStmt.setString(1, var);
+			rs = pStmt.executeQuery();
+			if(rs.next())
+				return rs.getString(1);
+			return defaultVal;
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return defaultVal;
+		} finally {
+			if(rs != null)
+				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
+		}
+	}
+
+	/**
+	 * Save a setting to the SJQv4 registry
+	 * @param var The name of the setting
+	 * @param val The value of the setting
+	 * @throws IllegalArgumentException Thrown if var = 'schema'; you cannot manipulate the schema value of the database
+	 */
+	public void setSetting(String var, String val) {
+		if("schema".equals(var))
+			throw new IllegalArgumentException("Cannot modify schema setting via setSetting()");
+		PreparedStatement del = stmts.get(DELETE_SETTING);
+		PreparedStatement add = stmts.get(SAVE_SETTING);
+		boolean localTransaction = false;
+		try {
+			localTransaction = conn.getAutoCommit();
+			if(localTransaction)
+				conn.setAutoCommit(false);
+			del.setString(1, var);
+			del.executeUpdate();
+			add.setString(1, var);
+			add.setString(2, val);
+			add.executeUpdate();
+			if(localTransaction)
+				conn.commit();
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			if(localTransaction)
+				try { conn.rollback(); } catch(SQLException e1) { LOG.error(SQL_ERROR, e1); }
+		} finally {
+			if(localTransaction)
+				try { conn.setAutoCommit(true); } catch(SQLException e) { LOG.error(SQL_ERROR, e); }
+		}
+	}
+	
 	/**
 	 * Close the connection to the DataStore; once closed you must call DataStore.get() to get a new
 	 * connection as this one will become invalid and will no longer function.

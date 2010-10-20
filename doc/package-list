@@ -3,3 +3,4 @@ com.google.code.sagetvaddons.sjq.server.commands
 com.google.code.sagetvaddons.sjq.server.network
 com.google.code.sagetvaddons.sjq.shared
 com.google.code.sagetvaddons.sjq.taskqueue
+com.google.code.sagetvaddons.sjq.utils

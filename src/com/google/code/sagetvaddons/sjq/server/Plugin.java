@@ -15,6 +15,7 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import gkusnick.sagetv.api.API;
 import it.sauronsoftware.cron4j.Scheduler;
 
 import java.io.File;
@@ -39,6 +40,13 @@ import com.google.code.sagetvaddons.sjq.listener.Listener;
  */
 public final class Plugin implements SageTVPlugin {
 	static private final Logger LOG = Logger.getLogger(Plugin.class);
+	
+	static private final String REC_STARTED = "RecordingStarted";
+	static private final String NEW_SEGMENT = "RecordingSegmentAdded";
+	static private final String MEDIA_IMPORTED = "MediaFileImported";
+	static private final String SYS_MSG_POSTED = "SystemMessagePosted";
+	static private String[] EVENTS = new String[] {REC_STARTED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
+	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
 	 */
@@ -173,6 +181,10 @@ public final class Plugin implements SageTVPlugin {
 		if(!crontab.isStarted())
 			crontab.start();
 		LOG.info("Server crontab has started!");
+
+		SageTVPluginRegistry reg = (SageTVPluginRegistry)API.apiNullUI.pluginAPI.GetSageTVPluginRegistry();
+		for(String event : EVENTS)
+			reg.eventSubscribe(this, event);
 	}
 
 	@Override
@@ -193,13 +205,26 @@ public final class Plugin implements SageTVPlugin {
 			crontab.stop();
 			LOG.info("SJQ crontab has been stopped!");
 		}
+		
+		SageTVPluginRegistry reg = (SageTVPluginRegistry)API.apiNullUI.pluginAPI.GetSageTVPluginRegistry();
+		for(String event : EVENTS)
+			reg.eventUnsubscribe(this, event);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void sageEvent(String arg0, Map arg1) {
-		// TODO Auto-generated method stub
-		
+		LOG.info("Event received: " + arg0);
+		TaskLoader loader = null;
+		if(arg0.matches(REC_STARTED + "|" + NEW_SEGMENT))
+			loader = new TvRecordingTaskLoader(API.apiNullUI.mediaFileAPI.Wrap(arg1.get("MediaFile")));
+		else if(arg0.equals(MEDIA_IMPORTED))
+			loader = new ImportedMediaTaskLoader(API.apiNullUI.mediaFileAPI.Wrap(arg1.get("MediaFile")));
+		else if(arg0.equals(SYS_MSG_POSTED))
+			loader = new SystemMessageTaskLoader(API.apiNullUI.systemMessageAPI.Wrap(arg1.get("SystemMessage")));
+		else
+			LOG.warn("Event ignored: " + arg0);
+		if(loader != null)
+			loader.load();
 	}
-
 }

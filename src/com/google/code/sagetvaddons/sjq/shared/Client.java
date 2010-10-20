@@ -72,8 +72,25 @@ public final class Client implements Serializable {
 	 * Default constructor
 	 */
 	public Client() {
+		this("", 23344);
 	}
 
+	/**
+	 * Constructor to be used when creating a new Client to be registered
+	 * @param host The host where this task client is running
+	 * @param port The port number the task client is listening on
+	 */
+	public Client(String host, int port) {
+		this.host = host;
+		state = Client.State.OFFLINE;
+		freeResources = 0;
+		schedule = DEFAULT_SCHED;
+		lastUpdate = new Date();
+		maxResources = DEFAULT_RESOURCES;
+		this.port = port;
+		tasks = new Task[0];		
+	}
+	
 	/**
 	 * Constructor
 	 * @param host The hostname this task client is reachable at
