@@ -24,9 +24,9 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
 import gkusnick.sagetv.api.MediaFileAPI.MediaFile;
 
-final class ImportedMediaTaskLoader implements TaskLoader {
+final public class ImportedMediaTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(ImportedMediaTaskLoader.class);
-	static private final String TASK_PROP = "ImportedMediaTaskList";
+	static public final String TASK_PROP = "ImportedMediaTaskList";
 	
 	private MediaFile mf;
 	

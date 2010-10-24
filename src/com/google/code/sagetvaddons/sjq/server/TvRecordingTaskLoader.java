@@ -28,10 +28,10 @@ import org.apache.log4j.Logger;
 import com.google.code.sagetvaddons.metadata.Factory;
 import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
-final class TvRecordingTaskLoader implements TaskLoader {
+final public class TvRecordingTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(TvRecordingTaskLoader.class);
 
-	static final String TASK_PROP = "SJQ4_TASKS";
+	static public final String TASK_PROP = "SJQ4_TASKS";
 
 	private MediaFile mf;
 

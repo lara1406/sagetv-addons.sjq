@@ -67,6 +67,7 @@ public final class Client implements Serializable {
 	private int maxResources;
 	private int port;
 	private Task[] tasks;
+	private int version;
 	
 	/**
 	 * Default constructor
@@ -88,7 +89,8 @@ public final class Client implements Serializable {
 		lastUpdate = new Date();
 		maxResources = DEFAULT_RESOURCES;
 		this.port = port;
-		tasks = new Task[0];		
+		tasks = new Task[0];
+		version = 0;
 	}
 	
 	/**
@@ -101,8 +103,9 @@ public final class Client implements Serializable {
 	 * @param lastUpdate The last time this client was updated
 	 * @param maxResources The max number of resources for this client
 	 * @param tasks The array of tasks this client is capable of running
+	 * @param version The version number of this client
 	 */
-	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks) {
+	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks, int version) {
 		this.host = host;
 		this.freeResources = freeResources;
 		this.schedule = schedule;
@@ -254,5 +257,19 @@ public final class Client implements Serializable {
 			if(t.getId().equals(taskId))
 				return t;
 		return null;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public int getVersion() {
+		return version;
+	}
+
+	/**
+	 * @param version the version to set
+	 */
+	public void setVersion(int version) {
+		this.version = version;
 	}
 }

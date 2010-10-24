@@ -15,7 +15,11 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import gkusnick.sagetv.api.API;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.TimerTask;
 
@@ -32,6 +36,8 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
  */
 public final class AgentManager extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(AgentManager.class);
+	static private final Collection<String> OLD_CLNTS = new ArrayList<String>();
+	static private final Collection<String> DEAD_CLNTS = new ArrayList<String>();
 	
 	/**
 	 * Perform the task; attempt to ping all registered task client agents
@@ -46,13 +52,29 @@ public final class AgentManager extends TimerTask {
 			try {
 				agent = new AgentClient(c);
 				clnt = agent.ping();
-				c.setState(Client.State.ONLINE);
+				String clntId = c.getHost() + ":" + c.getPort();
+				DEAD_CLNTS.remove(clntId);
+				if(clnt.getVersion() >= Config.get().getMinClientVersion()) {
+					c.setState(Client.State.ONLINE);
+					OLD_CLNTS.remove(clntId);
+				} else {
+					c.setState(Client.State.OFFLINE);
+					if(!OLD_CLNTS.contains(clntId)) {
+						OLD_CLNTS.add(clntId);
+						API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " needs to be upgraded.  It will be marked as OFFLINE until you upgrade it. [" + clnt.getVersion() + " < " + Config.get().getMinClientVersion() + "]", Config.get().getSysMsgProps());
+					}
+				}
 				c.setMaxResources(clnt.getMaxResources());
 				c.setTasks(clnt.getTasks());
 				c.setSchedule(clnt.getSchedule());
 			} catch (IOException e) {
+				String clntId = c.getHost() + ":" + c.getPort();
 				LOG.warn("IO error with client '" + c.getHost() + ":" + c.getPort() + "'; marking OFFLINE!", e);
 				c.setState(Client.State.OFFLINE);
+				if(!DEAD_CLNTS.contains(clntId)) {
+					DEAD_CLNTS.add(clntId);
+					API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " is not responding due to: '" + e.getMessage() + "'; it has been marked as OFFLINE, please investigate.", Config.get().getSysMsgProps());
+				}
 			} finally {
 				if(agent != null)
 					agent.close();

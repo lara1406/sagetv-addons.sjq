@@ -30,11 +30,14 @@ import org.apache.log4j.Logger;
  */
 public final class Config {
 	static private final Logger LOG = Logger.getLogger(Config.class);
+	static private final int MIN_CLNT_VER = 1116;
 	static private final String DEFAULT_PROPS = "plugins/sjq/sjq4.properties";
 	static private final String REFERENCE_PROPS = "plugins/sjq/sjq4.properties.ref";
 	static private final int DEFAULT_PORT = 23347;
 	
 	static private Config INSTANCE = null;
+	
+	static private Properties sysMsgProps = null;
 	
 	/**
 	 * Get the Config singleton; load it from the given props file if it hasn't already been loaded
@@ -102,5 +105,23 @@ public final class Config {
 	 */
 	public int getPort() {
 		return port;
+	}
+	
+	/**
+	 * Get the minimum task client versioni required to speak with this version of the engine
+	 * @return The minimum client version
+	 */
+	public int getMinClientVersion() {
+		return MIN_CLNT_VER;
+	}
+	
+	public Properties getSysMsgProps() {
+		synchronized(Config.class) {
+			if(sysMsgProps == null) {
+				sysMsgProps = new Properties();
+				sysMsgProps.setProperty("typename", "SJQv4 Message");
+			}
+		}
+		return sysMsgProps;
 	}
 }

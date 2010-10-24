@@ -24,9 +24,9 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
 import gkusnick.sagetv.api.SystemMessageAPI.SystemMessage;
 
-final class SystemMessageTaskLoader implements TaskLoader {
+final public class SystemMessageTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(SystemMessageTaskLoader.class);
-	static private final String TASK_PROP = "SysMsgTaskList";
+	static public final String TASK_PROP = "SysMsgTaskList";
 	
 	private SystemMessage msg;
 	

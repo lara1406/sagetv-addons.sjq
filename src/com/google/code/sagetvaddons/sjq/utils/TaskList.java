@@ -70,4 +70,6 @@ public final class TaskList {
 			return input.split("\\s*" + LIST_SEP + "\\s*");
 		return new String[0];
 	}
+	
+	private TaskList() {}
 }
