@@ -724,7 +724,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			if(rs.next()) {
-				Client c = new Client(host, port, 0, rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), Config.get().getMinClientVersion());
+				Client c = new Client(host, port, 0, rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), -1);
 				c.setFreeResources(getFreeResources(c));
 				return c;
 			}

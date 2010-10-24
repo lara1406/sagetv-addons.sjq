@@ -272,4 +272,12 @@ public final class Client implements Serializable {
 	public void setVersion(int version) {
 		this.version = version;
 	}
+	
+	/**
+	 * Get a short description of this client instance
+	 * @return The short description
+	 */
+	public String getDescription() {
+		return getHost() + ":" + getPort();
+	}
 }
