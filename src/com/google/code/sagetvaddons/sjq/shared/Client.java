@@ -116,6 +116,7 @@ public final class Client implements Serializable {
 			this.maxResources = 100;
 		this.port = port;
 		this.tasks = tasks;
+		this.version = version;
 	}
 
 	/**
