@@ -107,7 +107,8 @@ public final class DataStore {
 	static private final String READ_CLNT_TASKS = "ReadClntTasks";
 	static private final String DELETE_SETTING = "DelSetting";
 	static private final String SAVE_SETTING = "SaveSetting";
-	
+	static private final String DELETE_TASK = "DelTask";
+
 	static private boolean dbInitialized = false;
 
 	private Connection conn;
@@ -172,36 +173,36 @@ public final class DataStore {
 				"CONSTRAINT IF NOT EXISTS max_rc_ge_zero__client_tasks CHECK max_rc >= 0, " +
 				"CONSTRAINT IF NOT EXISTS max_rc_ge_min_rc__client_tasks CHECK max_rc >= min_rc)", Task.DEFAULT_REQ_RES, Task.DEFAULT_MAX_INST, Task.DEFAULT_SCHED, Task.DEFAULT_MAX_TIME, Task.DEFAULT_MAX_TIME_RATIO, Task.DEFAULT_MIN_RC, Task.DEFAULT_MAX_RC);
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE TABLE IF NOT EXISTS queue (id IDENTITY NOT NULL PRIMARY KEY, job_id VARCHAR(128) NOT NULL, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(), assigned TIMESTAMP, finished TIMESTAMP, state VARCHAR(64) NOT NULL DEFAULT 'WAITING', host VARCHAR(512), port INT, " +
-				"CONSTRAINT IF NOT EXISTS fk_client__queue FOREIGN KEY (host, port) REFERENCES client (host, port) ON DELETE CASCADE, " +
-				"CONSTRAINT IF NOT EXISTS state_not_empty__queue CHECK LENGTH(state) > 0)";
+		"CONSTRAINT IF NOT EXISTS fk_client__queue FOREIGN KEY (host, port) REFERENCES client (host, port) ON DELETE CASCADE, " +
+		"CONSTRAINT IF NOT EXISTS state_not_empty__queue CHECK LENGTH(state) > 0)";
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE TABLE IF NOT EXISTS queue_metadata (id BIGINT NOT NULL, var VARCHAR(128) NOT NULL, val VARCHAR(2048) NOT NULL, " +
-				"PRIMARY KEY(id, var), " +
-				"CONSTRAINT IF NOT EXISTS fk_queue__queue_metadata FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
-				"CONSTRAINT IF NOT EXISTS var_not_empty__queue_metadata CHECK LENGTH(var) > 0)";
+		"PRIMARY KEY(id, var), " +
+		"CONSTRAINT IF NOT EXISTS fk_queue__queue_metadata FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
+		"CONSTRAINT IF NOT EXISTS var_not_empty__queue_metadata CHECK LENGTH(var) > 0)";
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE TABLE IF NOT EXISTS task_log (id BIGINT NOT NULL, type VARCHAR(64) NOT NULL, log CLOB, " +
-				"PRIMARY KEY(id, type), " +
-				"CONSTRAINT IF NOT EXISTS fk_queue__task_log FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
-				"CONSTRAINT IF NOT EXISTS type_not_empty__task_log CHECK LENGTH(type) > 0)";
+		"PRIMARY KEY(id, type), " +
+		"CONSTRAINT IF NOT EXISTS fk_queue__task_log FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
+		"CONSTRAINT IF NOT EXISTS type_not_empty__task_log CHECK LENGTH(type) > 0)";
 		s.executeUpdate(qry);
 
 		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_for_clnt_by_task AS SELECT q.host, q.port, q.job_id, COUNT(q.job_id) AS active FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port, q.job_id)";
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_by_task AS SELECT job_id, SUM(active) AS active FROM active_cnt_for_clnt_by_task GROUP BY (job_id)"; 
 		s.executeUpdate(qry);
 
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_by_clnt AS SELECT host, port, SUM(active) AS active FROM active_cnt_for_clnt_by_task GROUP BY (host, port)";
 		s.executeUpdate(qry);
-				
+
 		qry = "INSERT INTO settings (var, val) VALUES ('schema', '1')";
 		try {
 			s.executeUpdate(qry);
@@ -245,51 +246,54 @@ public final class DataStore {
 
 		qry = "INSERT INTO client_tasks (host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, id, test, test_args) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		stmts.put(ADD_CLNT_TASK, conn.prepareStatement(qry));
-		
+
 		qry = "INSERT INTO queue (job_id) VALUES (?)";
 		stmts.put(ADD_TASK, conn.prepareStatement(qry));
-		
+
 		qry = "DELETE FROM queue_metadata WHERE id = ?";
 		stmts.put(DELETE_METADATA, conn.prepareStatement(qry));
-		
+
 		qry = "INSERT INTO queue_metadata (id, var, val) VALUES (?, ?, ?)";
 		stmts.put(ADD_METADATA, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT host, port FROM client_tasks WHERE id = ?";
 		stmts.put(CLIENT_FOR_TASK, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT used_resources FROM used_res_by_clnt WHERE host = ? AND port = ?";
 		stmts.put(GET_USED_RESOURCES, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT active FROM active_cnt_for_clnt_by_task WHERE host = ? AND port = ? AND job_id = ?";
 		stmts.put(GET_ACTIVE_INSTS, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT var, val FROM queue_metadata WHERE id = ?";
 		stmts.put(GET_METADATA, conn.prepareStatement(qry));
-		
+
 		qry = "UPDATE queue SET assigned = ?, finished = ?, state = ?, host = ?, port = ? WHERE id = ? AND job_id = ?";
 		stmts.put(UPDATE_QUEUE, conn.prepareStatement(qry));
-		
+
 		qry = "UPDATE task_log SET log = ? WHERE id = ? AND type = ?";
 		stmts.put(UPDATE_LOG, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT COUNT(*) FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(COUNT_LOG, conn.prepareStatement(qry));
-		
+
 		qry = "INSERT INTO task_log (id, type, log) VALUES (?, ?, ?)";
 		stmts.put(ADD_LOG, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT log FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(READ_LOG, conn.prepareStatement(qry));
-		
+
 		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ?";
 		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
-		
+
 		qry = "DELETE FROM settings WHERE var = ?";
 		stmts.put(DELETE_SETTING, conn.prepareStatement(qry));
-		
+
 		qry = "INSERT INTO settings (var, val) VALUES (?, ?)";
 		stmts.put(SAVE_SETTING, conn.prepareStatement(qry));
+
+		qry = "DELETE FROM queue WHERE id = ? AND state IN ('WAITING', 'RETURNED', 'FAILED')";
+		stmts.put(DELETE_TASK, conn.prepareStatement(qry));
 	}
 
 	/**
@@ -346,7 +350,7 @@ public final class DataStore {
 	Task[] getTasksForClient(Client c) {
 		return getTasksForClient(c.getHost(), c.getPort());
 	}
-	
+
 	/**
 	 * Get all the configured Tasks for a Client, identified by host and port
 	 * @param host The Client's hostname
@@ -429,7 +433,7 @@ public final class DataStore {
 			}
 		}
 	}
-	
+
 	/**
 	 * Get an array of tasks that are waiting to be assigned to a client
 	 * @return The array of pending tasks
@@ -459,7 +463,7 @@ public final class DataStore {
 			}
 		}
 	}
-	
+
 	/**
 	 * Update a QueuedTask; all fields of the task are updated in the DataStore
 	 * @param qt The task to be updated
@@ -508,19 +512,19 @@ public final class DataStore {
 		} catch (SQLException e) {
 			if(localTransaction)
 				try { conn.rollback(); } catch(SQLException e1) { LOG.fatal("RollbackError", e1); }
-			throw e;
+				throw e;
 		} finally {
 			if(localTransaction)
 				try { conn.setAutoCommit(true); } catch(SQLException e) { LOG.fatal("AutoCommitError", e); }
 		}
 	}
-	
+
 	// Write the metadata to the database
 	private void setMetadata(long id, Map<String, String> data) throws SQLException {
 		PreparedStatement pStmt = stmts.get(DELETE_METADATA);
 		pStmt.setLong(1, id);
 		pStmt.executeUpdate();
-		
+
 		if(data.keySet().size() > 0) {
 			pStmt = stmts.get(ADD_METADATA);
 			pStmt.setLong(1, id);
@@ -532,7 +536,7 @@ public final class DataStore {
 			pStmt.executeBatch();
 		}
 	}
-	
+
 	// Add a new task entry to the queue table and return the unique id assigned to it
 	private long createTask(String taskId) throws SQLException {
 		PreparedStatement pStmt = stmts.get(ADD_TASK);
@@ -550,7 +554,7 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
 	// Update the client tasks for the given Client; this should be ran each time a task client is pinged
 	private void updateClientTasks(Client clnt) throws SQLException {
 		PreparedStatement pStmt = stmts.get(WIPE_CLNT_TASKS);
@@ -608,7 +612,7 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
 	// Private helper to append log output to an existing entry
 	private boolean updateLog(long id, String type, String log) {
 		PreparedStatement pStmt = stmts.get(READ_LOG);
@@ -641,11 +645,11 @@ public final class DataStore {
 		} finally {
 			if(rs != null)
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
-			if(r != null)
-				try { r.close(); } catch(IOException e) { LOG.warn("IOError", e); }
+				if(r != null)
+					try { r.close(); } catch(IOException e) { LOG.warn("IOError", e); }
 		}
 	}
-	
+
 	// Private helper to create a new log entry for a task queue id
 	private boolean addLog(long id, String type, String log) {
 		PreparedStatement pStmt = stmts.get(ADD_LOG);
@@ -661,7 +665,7 @@ public final class DataStore {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Create a new Client or update an existing one; use this method to register new task clients with the server
 	 * @param clnt The client to be created or updated
@@ -780,7 +784,7 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
 	/**
 	 * Get the metadata map for the given task queue id
 	 * @param id The unique task queue id to build the map for
@@ -796,7 +800,7 @@ public final class DataStore {
 			while(rs.next())
 				map.put(rs.getString(1), rs.getString(2));
 			return map;
-				
+
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
 			return Collections.emptyMap();
@@ -805,7 +809,7 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
 	/**
 	 * Get the free resource count for the given Client
 	 * @param c The client to check the free resource count for
@@ -830,7 +834,7 @@ public final class DataStore {
 				try { rs.close(); } catch(SQLException e) { LOG.warn(SQL_ERROR, e); }
 		}
 	}
-	
+
 	// Private helper that updates an existing client entry in the database
 	private boolean updateClient(Client clnt) {
 		PreparedStatement pStmt = stmts.get(UPDATE_CLIENT);
@@ -940,7 +944,7 @@ public final class DataStore {
 				try { conn.setAutoCommit(true); } catch(SQLException e) { LOG.error(SQL_ERROR, e); }
 		}
 	}
-	
+
 	/**
 	 * Close the connection to the DataStore; once closed you must call DataStore.get() to get a new
 	 * connection as this one will become invalid and will no longer function.
@@ -952,6 +956,71 @@ public final class DataStore {
 				stmts.clear();
 				if(conn != null)
 					try { conn.close(); } catch(SQLException e) { LOG.error(SQL_ERROR, e); }
-				POOL.remove();
+					POOL.remove();
+	}
+
+	boolean deleteTask(long queueId) {
+		PreparedStatement pStmt = stmts.get(DELETE_TASK);
+		try {
+			pStmt.setLong(1, queueId);
+			return pStmt.executeUpdate() == 1;
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return false;
+		}
+	}
+
+	/**
+	 * Delete a registered task client
+	 * @param c The client to be deleted
+	 * @return True if the client was deleted or false otherwise; you cannot delete a task client if it is actively running tasks, false will be returned if you try to do so
+	 */
+	public boolean deleteClient(Client c) {
+		synchronized(TaskQueue.get()) {
+			if(c.getMaxResources() != getFreeResources(c)) {
+				LOG.warn("Can't delete " + c + " because it is currently running tasks!");
+				return false;
+			}
+
+			PreparedStatement pStmt = stmts.get(DELETE_CLIENT);
+			try {
+				pStmt.setString(1, c.getHost());
+				pStmt.setInt(2, c.getPort());
+				return pStmt.executeUpdate() == 1;
+			} catch(SQLException e) {
+				LOG.error(SQL_ERROR, e);
+				return false;
+			}
+		}
+	}
+	
+	/**
+	 * Get a list of all registered task ids from all registered task clients
+	 * @return The list of task ids; may be empty in case of error, but never null
+	 */
+	public String[] getRegisteredTaskIds() {
+		String qry = "SELECT DISTINCT id FROM client_tasks";
+		Collection<String> tasks = new ArrayList<String>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(qry);
+			while(rs.next())
+				tasks.add(rs.getString(1));
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return new String[0];
+		} finally {
+			try {
+				if(rs != null)
+					rs.close();
+				if(stmt != null)
+					stmt.close();
+			} catch(SQLException e) {
+				LOG.warn(SQL_ERROR, e);
+			}
+		}
+		return tasks.toArray(new String[tasks.size()]);
 	}
 }

@@ -85,6 +85,24 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	/**
+	 * Delete a task from the task queue
+	 * @param queueId The unique task queue id number to be deleted
+	 * @return True if the task was deleted or false otherwise; only tasks in WAITING, RETURNED, or FAILED state can be deleted, any other state will cause false to be returned
+	 * @throws IOException Thrown if there were fatal errors with the network connection to the SJQ engine socket
+	 */
+	public boolean deleteTask(long queueId) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("RMTASK");
+		if(ack.isOk()) {
+			getOut().writeLong(queueId);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			return ack.isOk();
+		} else
+			throw new IOException("RMTASK command rejected by server!");
+	}
+	
+	/**
 	 * Get the list of active tasks in the queue; a task is active if it's in WAITING, RETURNED or RUNNING state
 	 * @return The array of active tasks; can be empty in case of error, but never null
 	 */
@@ -117,5 +135,14 @@ public final class ServerClient extends ListenerClient {
 	 */
 	public boolean saveClient(Client clnt) {
 		return datastore.saveClient(clnt);
+	}
+	
+	/**
+	 * Delete a registered task client
+	 * @param clnt The client to be deleted
+	 * @return True on success or false otherwise; you cannot delete a task client if it is currently running tasks, false will be returned if you try to do so
+	 */
+	public boolean deleteClient(Client clnt) {
+		return datastore.deleteClient(clnt);
 	}
 }

@@ -136,6 +136,15 @@ final public class TaskQueue {
 	}
 	
 	/**
+	 * Delete a pending task from the queue
+	 * @param queueId The unique task queue id number of the task to be deleted
+	 * @return True if the task was successfully deleted from the queue or false otherwise; a task not in WAITING, RETURNED or FAILED state cannot be deleted and will return false
+	 */
+	synchronized public boolean deleteTask(long queueId) {
+		return DataStore.get().deleteTask(queueId);
+	}
+	
+	/**
 	 * Attempt to assign all pending tasks to a client; tasks that can't be assigned are simply left alone
 	 */
 	synchronized void startTasks() {

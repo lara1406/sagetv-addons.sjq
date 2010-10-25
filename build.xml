@@ -166,6 +166,14 @@
 	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sjq-common" reqtype="UPGRADE" descriptor="sjq-common.plugin.xml" />
 	<sagesubmit name="Derek Battams" user="Slugger" email="derek@battams.ca" pluginid="sjq" reqtype="UPGRADE" descriptor="sjq.plugin.xml" />
   </target>
+
+  <target name="javadoc" depends="plugin">
+	<javadoc destdir="doc" excludepackagenames="com.google.code.sagetvaddons.sjq.server.commands.*,com.google.code.sagetvaddons.sjq.server.network.*">
+		<sourcefiles>
+  			<fileset dir="src" includes="**/sjq/server/DataStore.java,**/sjq/shared/*.java,**/sjq/taskqueue/*.java,**sjq/utils/*.java" />
+  		</sourcefiles>
+	</javadoc>
+  </target>
 	
   <target name="clean" depends="rmgensrc" description="Cleans this project">
   	<delete dir="${bld.dir}" failonerror="false" />

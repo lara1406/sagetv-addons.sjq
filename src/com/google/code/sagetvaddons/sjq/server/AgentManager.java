@@ -34,7 +34,7 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
  * @author dbattams
  * @version $Id$
  */
-public final class AgentManager extends TimerTask {
+final class AgentManager extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(AgentManager.class);
 	static private final Collection<String> OLD_CLNTS = new ArrayList<String>();
 	static private final Collection<String> DEAD_CLNTS = new ArrayList<String>();
