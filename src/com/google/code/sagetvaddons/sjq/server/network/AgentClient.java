@@ -63,7 +63,10 @@ public final class AgentClient extends ListenerClient {
 				LOG.error("IOError", e);
 				setIsValid(false);
 			}
-		}
+		} else if(ack != null)
+			LOG.error(ack.getMsg());
+		else
+			LOG.error("Received null ack from server!");
 		return c;
 	}
 	
