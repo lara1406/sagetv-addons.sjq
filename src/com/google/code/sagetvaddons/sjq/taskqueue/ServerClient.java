@@ -145,4 +145,12 @@ public final class ServerClient extends ListenerClient {
 	public boolean deleteClient(Client clnt) {
 		return datastore.deleteClient(clnt);
 	}
+	
+	/**
+	 * Get the list of all registered task ids
+	 * @return The array of all registered task ids, may be empty in case of error but never null
+	 */
+	public String[] getRegisteredTaskIds() {
+		return datastore.getRegisteredTaskIds();
+	}
 }
