@@ -227,5 +227,9 @@ final public class TaskQueue {
 	 */
 	synchronized public boolean updateTask(QueuedTask qt) {
 		return DataStore.get().updateTask(qt);
-	}	
+	}
+	
+	synchronized public boolean deleteClient(Client c) {
+		return DataStore.get().deleteClient(c);
+	}
 }

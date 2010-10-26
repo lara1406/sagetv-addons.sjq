@@ -970,30 +970,23 @@ public final class DataStore {
 		}
 	}
 
-	/**
-	 * Delete a registered task client
-	 * @param c The client to be deleted
-	 * @return True if the client was deleted or false otherwise; you cannot delete a task client if it is actively running tasks, false will be returned if you try to do so
-	 */
-	public boolean deleteClient(Client c) {
-		synchronized(TaskQueue.get()) {
-			if(c.getMaxResources() != getFreeResources(c)) {
-				LOG.warn("Can't delete " + c + " because it is currently running tasks!");
-				return false;
-			}
+	boolean deleteClient(Client c) {
+		if(c.getMaxResources() != getFreeResources(c)) {
+			LOG.warn("Can't delete " + c + " because it is currently running tasks!");
+			return false;
+		}
 
-			PreparedStatement pStmt = stmts.get(DELETE_CLIENT);
-			try {
-				pStmt.setString(1, c.getHost());
-				pStmt.setInt(2, c.getPort());
-				return pStmt.executeUpdate() == 1;
-			} catch(SQLException e) {
-				LOG.error(SQL_ERROR, e);
-				return false;
-			}
+		PreparedStatement pStmt = stmts.get(DELETE_CLIENT);
+		try {
+			pStmt.setString(1, c.getHost());
+			pStmt.setInt(2, c.getPort());
+			return pStmt.executeUpdate() == 1;
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return false;
 		}
 	}
-	
+
 	/**
 	 * Get a list of all registered task ids from all registered task clients
 	 * @return The list of task ids; may be empty in case of error, but never null

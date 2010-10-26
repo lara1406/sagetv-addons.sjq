@@ -103,6 +103,24 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	/**
+	 * Delete a registered task client
+	 * @param clnt The client to be deleted
+	 * @return True on success or false otherwise; you cannot delete a task client if it is currently running tasks, false will be returned if you try to do so
+	 * @thorws IOException In case of communication errors with the server
+	 */
+	public boolean deleteClient(Client clnt) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("RMCLNT");
+		if(ack.isOk()) {
+			getOut().writeObject(clnt);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			return ack.isOk();
+		} else
+			throw new IOException("RMCLNT command rejected by server!");
+	}
+	
+	/**
 	 * Get the list of active tasks in the queue; a task is active if it's in WAITING, RETURNED or RUNNING state
 	 * @return The array of active tasks; can be empty in case of error, but never null
 	 */
@@ -136,16 +154,7 @@ public final class ServerClient extends ListenerClient {
 	public boolean saveClient(Client clnt) {
 		return datastore.saveClient(clnt);
 	}
-	
-	/**
-	 * Delete a registered task client
-	 * @param clnt The client to be deleted
-	 * @return True on success or false otherwise; you cannot delete a task client if it is currently running tasks, false will be returned if you try to do so
-	 */
-	public boolean deleteClient(Client clnt) {
-		return datastore.deleteClient(clnt);
-	}
-	
+		
 	/**
 	 * Get the list of all registered task ids
 	 * @return The array of all registered task ids, may be empty in case of error but never null
