@@ -53,6 +53,7 @@ public final class Client implements Serializable {
 	 * The default number of resources for a task client
 	 */
 	static public int DEFAULT_RESOURCES = 100;
+	static public int DEFAULT_PORT = 23344;
 	
 	/**
 	 * The default active schedule for a task client; this value means the task client is always enabled; see the crontab docs for more details
@@ -73,7 +74,7 @@ public final class Client implements Serializable {
 	 * Default constructor
 	 */
 	public Client() {
-		this("", 23344);
+		this("", DEFAULT_PORT);
 	}
 
 	/**

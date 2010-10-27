@@ -19,6 +19,7 @@ import gkusnick.sagetv.api.API;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.TimerTask;
@@ -52,21 +53,18 @@ final class AgentManager extends TimerTask {
 			try {
 				agent = new AgentClient(c);
 				clnt = agent.ping();
-				String clntId = c.getHost() + ":" + c.getPort();
+				String clntId = clnt.getHost() + ":" + clnt.getPort();
 				DEAD_CLNTS.remove(clntId);
 				if(clnt.getVersion() >= Config.get().getMinClientVersion()) {
-					c.setState(Client.State.ONLINE);
+					clnt.setState(Client.State.ONLINE);
 					OLD_CLNTS.remove(clntId);
 				} else {
-					c.setState(Client.State.OFFLINE);
+					clnt.setState(Client.State.OFFLINE);
 					if(!OLD_CLNTS.contains(clntId)) {
 						OLD_CLNTS.add(clntId);
 						API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " needs to be upgraded.  It will be marked as OFFLINE until you upgrade it. [" + clnt.getVersion() + " < " + Config.get().getMinClientVersion() + "]", Config.get().getSysMsgProps());
 					}
 				}
-				c.setMaxResources(clnt.getMaxResources());
-				c.setTasks(clnt.getTasks());
-				c.setSchedule(clnt.getSchedule());
 			} catch (IOException e) {
 				String clntId = c.getHost() + ":" + c.getPort();
 				LOG.warn("IO error with client '" + c.getHost() + ":" + c.getPort() + "'; marking OFFLINE!", e);
@@ -75,12 +73,13 @@ final class AgentManager extends TimerTask {
 					DEAD_CLNTS.add(clntId);
 					API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " is not responding due to: '" + e.getMessage() + "'; it has been marked as OFFLINE, please investigate.", Config.get().getSysMsgProps());
 				}
+				clnt = c;
 			} finally {
 				if(agent != null)
 					agent.close();
 			}
-			c.setLastUpdate(new Date());
-			ds.saveClient(c);
+			clnt.setLastUpdate(new Date());
+			ds.saveClient(clnt);
 		}
 	}	
 }

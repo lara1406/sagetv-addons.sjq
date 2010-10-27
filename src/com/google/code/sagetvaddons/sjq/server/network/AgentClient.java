@@ -87,6 +87,7 @@ public final class AgentClient extends ListenerClient {
 		if(ack != null && ack.isOk()) {
 			try {
 				getOut().writeObject(qt);
+				getOut().flush();
 				ack = (NetworkAck)readObj();
 				return State.valueOf(ack.getMsg());
 			} catch (IOException e) {
@@ -97,4 +98,51 @@ public final class AgentClient extends ListenerClient {
 		}
 		return null;
 	}
+	
+	public boolean killTask(QueuedTask qt) {
+		NetworkAck ack = null;
+		try {
+			ack = sendCmd("KILL");
+		} catch(IOException e) {
+			LOG.error("IOError", e);
+			setIsValid(false);
+			return false;
+		}
+		if(ack != null && ack.isOk()) {
+			try {
+				getOut().writeObject(qt);
+				getOut().flush();
+				ack = (NetworkAck)readObj();
+				return ack.isOk();
+			} catch(IOException e) {
+				LOG.error("IOError", e);
+				setIsValid(false);
+				return false;
+			}
+		} else {
+			LOG.error("KILL command rejected by agent!");
+			return false;
+		}
+	}
+	
+	public void killAll() {
+		NetworkAck ack = null;
+		try {
+			ack = sendCmd("KILLALL");
+		} catch(IOException e) {
+			LOG.error("IOError", e);
+			setIsValid(false);
+		}
+		if(ack != null && ack.isOk()) {
+			try {
+				ack = (NetworkAck)readObj();
+				if(ack == null || !ack.isOk())
+					LOG.error("KILLALL command failed on agent!");
+			} catch(IOException e) {
+				LOG.error("IOError", e);
+				setIsValid(false);
+			}
+		} else
+			LOG.error("KILLALL command rejected by agent!");
+	}	
 }

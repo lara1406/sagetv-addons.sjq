@@ -162,4 +162,40 @@ public final class ServerClient extends ListenerClient {
 	public String[] getRegisteredTaskIds() {
 		return datastore.getRegisteredTaskIds();
 	}
+	
+	/**
+	 * Kill the given task on the task agent that is running it
+	 * @param qt The task to be killed
+	 * @return True if the signal was sent successfully or false otherwise; this is an asynchronous command, the return value does not represent if a task was actually killed only if the signal to kill was successfully sent
+	 * @throws IOException In case of network comm issues
+	 */
+	public boolean killTask(QueuedTask qt) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("KILL");
+		if(ack.isOk()) {
+			getOut().writeObject(qt);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			return ack.isOk();
+		} else
+			throw new IOException("KILL command rejected by server!");				
+	}
+	
+	/**
+	 * Kill all running tasks on the given task client
+	 * @param clnt The task client to kill all active tasks on
+	 * @return True on successful request, false otherwise; this is an asynchronous command so the return value does not signify if any tasks were actually killed
+	 * @throws IOException In case of network comm errors
+	 */
+	public boolean killAllTasks(Client clnt) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("KILLALL");
+		if(ack.isOk()) {
+			getOut().writeObject(clnt);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			return ack.isOk();
+		} else
+			throw new IOException("KILLALL command rejected by server!");		
+	}
 }

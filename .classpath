@@ -8,8 +8,8 @@
 	<classpathentry kind="var" path="SAGELIB/commons-lang-2.4.jar"/>
 	<classpathentry kind="var" path="SAGELIB/commons-io-1.4.jar"/>
 	<classpathentry kind="var" path="SAGELIB/cron4j-2.2.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SJQv4Listener"/>
 	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
 	<classpathentry kind="var" path="SAGELIB/somf.jar"/>
+	<classpathentry kind="var" path="SAGELIB/sjq-listener.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -283,7 +283,7 @@ public final class DataStore {
 		qry = "SELECT log FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(READ_LOG, conn.prepareStatement(qry));
 
-		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ?";
+		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ? AND t.host IS NOT NULL";
 		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
 
 		qry = "DELETE FROM settings WHERE var = ?";
@@ -409,8 +409,23 @@ public final class DataStore {
 	 * @return An array of QueuedTasks representing all tasks in the queue that are running or waiting to be assigned to a client
 	 */
 	public QueuedTask[] getActiveQueue() {
+		return getQueue(true);
+	}
+	
+	/**
+	 * <p>Return an array of every task in the queue.</p>
+	 * <p>This method returns every task in the queue at the time of the call; this includes active tasks, completed tasks, and failed tasks. <b>This list can get rather large, rather quickly!</b></p>
+	 * @return An array of QueuedTasks representing all tasks in the queue
+	 */
+	public QueuedTask[] getQueue() {
+		return getQueue(false);
+	}
+	
+	QueuedTask[] getQueue(boolean activeOnly) {
 		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
-		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port) WHERE state NOT IN ('COMPLETED', 'FAILED', 'SKIPPED')";
+		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port)";
+		if(activeOnly)
+			qry = qry.concat(" WHERE state NOT IN ('COMPLETED', 'FAILED', 'SKIPPED')");
 		Statement stmt = null;
 		ResultSet rs = null;
 		try {
@@ -971,7 +986,10 @@ public final class DataStore {
 	}
 
 	boolean deleteClient(Client c) {
-		if(c.getMaxResources() != getFreeResources(c)) {
+		if(c == null) {
+			LOG.warn("Can't delete null client!");
+			return false;
+		} else if(c.getMaxResources() != getFreeResources(c)) {
 			LOG.warn("Can't delete " + c + " because it is currently running tasks!");
 			return false;
 		}
