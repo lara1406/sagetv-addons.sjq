@@ -202,6 +202,24 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	/**
+	 * Request the server pings the given client and updates its status
+	 * @param clnt The Client to be pinged by the server
+	 * @return True on success or false otherwise; this is an asynchronous command; the return value only denotes if the request was received by the server, it doesn't represent the final status of the ping
+	 * @throws IOException If there are network comm errors
+	 */
+	public boolean pingTaskClient(Client clnt) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("PINGC");
+		if(ack.isOk()) {
+			getOut().writeObject(clnt);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			return ack.isOk();
+		} else
+			throw new IOException("PINGC command rejected by server!");
+	}
+	
+	/**
 	 * Return the metadata map associated with the given QueuedTask
 	 * @param qt The task to get metadata for
 	 * @return The task's metadata.  An empty map is returned if the task has no metadata.

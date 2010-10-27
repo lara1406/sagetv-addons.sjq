@@ -19,7 +19,6 @@ import gkusnick.sagetv.api.API;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.TimerTask;
@@ -35,10 +34,49 @@ import com.google.code.sagetvaddons.sjq.shared.Client;
  * @author dbattams
  * @version $Id$
  */
-final class AgentManager extends TimerTask {
+final public class AgentManager extends TimerTask {
 	static private final Logger LOG = Logger.getLogger(AgentManager.class);
 	static private final Collection<String> OLD_CLNTS = new ArrayList<String>();
 	static private final Collection<String> DEAD_CLNTS = new ArrayList<String>();
+	
+	static public void ping(Client c) {
+		LOG.info("Pinging " + c);
+		DataStore ds = DataStore.get();
+		AgentClient agent = null;
+		Client clnt = null;
+		try {
+			agent = new AgentClient(c);
+			clnt = agent.ping();
+			String clntId = clnt.getHost() + ":" + clnt.getPort();
+			DEAD_CLNTS.remove(clntId);
+			if(clnt.getVersion() >= Config.get().getMinClientVersion()) {
+				clnt.setState(Client.State.ONLINE);
+				OLD_CLNTS.remove(clntId);
+			} else {
+				clnt.setState(Client.State.OFFLINE);
+				if(!OLD_CLNTS.contains(clntId)) {
+					OLD_CLNTS.add(clntId);
+					API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " needs to be upgraded.  It will be marked as OFFLINE until you upgrade it. [" + clnt.getVersion() + " < " + Config.get().getMinClientVersion() + "]", Config.get().getSysMsgProps());
+				}
+			}
+		} catch (IOException e) {
+			String clntId = c.getHost() + ":" + c.getPort();
+			LOG.warn("IO error with client '" + c.getHost() + ":" + c.getPort() + "'; marking OFFLINE!", e);
+			c.setState(Client.State.OFFLINE);
+			if(!DEAD_CLNTS.contains(clntId)) {
+				DEAD_CLNTS.add(clntId);
+				API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " is not responding due to: '" + e.getMessage() + "'; it has been marked as OFFLINE, please investigate.", Config.get().getSysMsgProps());
+			}
+			clnt = c;
+		} finally {
+			if(agent != null)
+				agent.close();
+		}
+		clnt.setLastUpdate(new Date());
+		ds.saveClient(clnt);		
+	}
+	
+	AgentManager() {}
 	
 	/**
 	 * Perform the task; attempt to ping all registered task client agents
@@ -46,40 +84,7 @@ final class AgentManager extends TimerTask {
 	@Override
 	public void run() {
 		DataStore ds = DataStore.get();
-		for(Client c : ds.getAllClients()) {
-			LOG.info("Pinging " + c);
-			AgentClient agent = null;
-			Client clnt = null;
-			try {
-				agent = new AgentClient(c);
-				clnt = agent.ping();
-				String clntId = clnt.getHost() + ":" + clnt.getPort();
-				DEAD_CLNTS.remove(clntId);
-				if(clnt.getVersion() >= Config.get().getMinClientVersion()) {
-					clnt.setState(Client.State.ONLINE);
-					OLD_CLNTS.remove(clntId);
-				} else {
-					clnt.setState(Client.State.OFFLINE);
-					if(!OLD_CLNTS.contains(clntId)) {
-						OLD_CLNTS.add(clntId);
-						API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " needs to be upgraded.  It will be marked as OFFLINE until you upgrade it. [" + clnt.getVersion() + " < " + Config.get().getMinClientVersion() + "]", Config.get().getSysMsgProps());
-					}
-				}
-			} catch (IOException e) {
-				String clntId = c.getHost() + ":" + c.getPort();
-				LOG.warn("IO error with client '" + c.getHost() + ":" + c.getPort() + "'; marking OFFLINE!", e);
-				c.setState(Client.State.OFFLINE);
-				if(!DEAD_CLNTS.contains(clntId)) {
-					DEAD_CLNTS.add(clntId);
-					API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, "The task client at " + clntId + " is not responding due to: '" + e.getMessage() + "'; it has been marked as OFFLINE, please investigate.", Config.get().getSysMsgProps());
-				}
-				clnt = c;
-			} finally {
-				if(agent != null)
-					agent.close();
-			}
-			clnt.setLastUpdate(new Date());
-			ds.saveClient(clnt);
-		}
-	}	
+		for(Client c : ds.getAllClients())
+			ping(c);
+	}
 }
