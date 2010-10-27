@@ -16,6 +16,7 @@
 package com.google.code.sagetvaddons.sjq.taskqueue;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import sagex.api.Configuration;
@@ -26,6 +27,7 @@ import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
+import com.google.code.sagetvaddons.sjq.shared.Task;
 
 /**
  * Provides synchronized access to the task queue across JVMs via sockets
@@ -197,5 +199,22 @@ public final class ServerClient extends ListenerClient {
 			return ack.isOk();
 		} else
 			throw new IOException("KILLALL command rejected by server!");		
+	}
+	
+	/**
+	 * Return the metadata map associated with the given QueuedTask
+	 * @param qt The task to get metadata for
+	 * @return The task's metadata.  An empty map is returned if the task has no metadata.
+	 */
+	public Map<String, String> getMetadataForTask(QueuedTask qt) {
+		return datastore.getMetadata(qt.getQueueId());
+	}
+	
+	/**
+	 * Get a map of all registered tasks; the keys of the map are the task client the task is registered to
+	 * @return The map of registered tasks, keyed by Client.getDescription()
+	 */
+	public Map<String, Collection<Task>> getAllRegisteredTasks() {
+		return datastore.getAllRegisteredTasks();
 	}
 }

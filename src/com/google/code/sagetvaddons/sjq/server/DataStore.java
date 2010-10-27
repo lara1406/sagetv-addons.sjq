@@ -805,7 +805,7 @@ public final class DataStore {
 	 * @param id The unique task queue id to build the map for
 	 * @return A map of metadata for the given task id; may be an empty map, but never null
 	 */
-	Map<String, String> getMetadata(long id) {
+	public Map<String, String> getMetadata(long id) {
 		PreparedStatement pStmt = stmts.get(GET_METADATA);
 		ResultSet rs = null;
 		try {
@@ -1033,5 +1033,45 @@ public final class DataStore {
 			}
 		}
 		return tasks.toArray(new String[tasks.size()]);
+	}
+	
+	/**
+	 * <p>Get a map of all registered tasks</p>
+	 * <p>Each key of the map is a Client.getDescription() value for the client the task belongs to</p>
+	 * @return The map of registered tasks; may be empty in case of error, but never null
+	 */
+	public Map<String, Collection<Task>> getAllRegisteredTasks() {
+		String qry = "SELECT id, host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args FROM client_tasks";
+		Map<String, Collection<Task>> map = new HashMap<String, Collection<Task>>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(qry);
+			while(rs.next()) {
+				Client c = getClient(rs.getString(2), rs.getInt(3));
+				if(c == null)
+					continue;
+				Collection<Task> tasks = map.get(c.getDescription());
+				if(tasks == null) {
+					tasks = new ArrayList<Task>();
+					map.put(c.getDescription(), tasks);
+				}
+				tasks.add(new Task(rs.getString(1), rs.getInt(4), rs.getInt(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getLong(9), rs.getFloat(10), rs.getInt(11), rs.getInt(12), rs.getString(13), rs.getString(14)));
+			}
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+			return Collections.emptyMap();
+		} finally {
+			try {
+				if(rs != null)
+					rs.close();
+				if(stmt != null)
+					stmt.close();
+			} catch(SQLException e) {
+				LOG.warn(SQL_ERROR, e);
+			}
+		}
+		return map;
 	}
 }
