@@ -432,7 +432,7 @@ public final class DataStore {
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(qry);
 			while(rs.next())
-				tasks.add(new QueuedTask(rs.getLong(1), rs.getString(2), rs.getInt(7), rs.getInt(8), rs.getString(9), rs.getString(10), rs.getString(11), rs.getLong(12), rs.getFloat(13), rs.getInt(14), rs.getInt(15), getMetadata(rs.getLong(1)), rs.getTimestamp(3), rs.getTimestamp(4), rs.getTimestamp(5), QueuedTask.State.valueOf(rs.getString(6)), getClient(rs.getString(18), rs.getInt(19)), "localhost", -1, rs.getString(16), rs.getString(17), 1098));
+				tasks.add(new QueuedTask(rs.getLong(1), rs.getString(2), rs.getInt(7), rs.getInt(8), rs.getString(9), rs.getString(10), rs.getString(11), rs.getLong(12), rs.getFloat(13), rs.getInt(14), rs.getInt(15), getMetadata(rs.getLong(1)), rs.getTimestamp(3), rs.getTimestamp(4), rs.getTimestamp(5), QueuedTask.State.valueOf(rs.getString(6)), getClient(rs.getString(18), rs.getInt(19)), "localhost", Config.get().getPort(), rs.getString(16), rs.getString(17), 1098));
 			return tasks.toArray(new QueuedTask[tasks.size()]);
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);

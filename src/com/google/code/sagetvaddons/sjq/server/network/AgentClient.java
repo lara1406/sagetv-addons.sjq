@@ -144,5 +144,31 @@ public final class AgentClient extends ListenerClient {
 			}
 		} else
 			LOG.error("KILLALL command rejected by agent!");
-	}	
+	}
+	
+	public boolean isTaskActive(QueuedTask qt) {
+		NetworkAck ack = null;
+		try {
+			ack = sendCmd("ISACTIVE");
+		} catch(IOException e) {
+			LOG.error("IOError", e);
+			setIsValid(false);
+		}
+		if(ack != null && ack.isOk()) {
+			try {
+				getOut().writeObject(qt);
+				getOut().flush();
+				ack = (NetworkAck)readObj();
+				if(ack != null && ack.isOk())
+					return Boolean.parseBoolean(ack.getMsg());
+				else
+					return false;
+			} catch(IOException e) {
+				LOG.error("IOError", e);
+				setIsValid(false);
+				return false;
+			}
+		} else
+			return false;
+	}
 }
