@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
  */
 public final class Config {
 	static private final Logger LOG = Logger.getLogger(Config.class);
-	static private final int MIN_CLNT_VER = 1158;
+	static private final int MIN_CLNT_VER = 1166;
 	static private final String DEFAULT_PROPS = "plugins/sjq/sjq4.properties";
 	static private final String REFERENCE_PROPS = "plugins/sjq/sjq4.properties.ref";
 	static private final int DEFAULT_PORT = 23347;

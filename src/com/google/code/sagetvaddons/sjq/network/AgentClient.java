@@ -19,12 +19,8 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import sagex.SageAPI;
-import sagex.remote.rmi.RMISageAPI;
-
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
-import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
