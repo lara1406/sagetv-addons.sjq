@@ -13,7 +13,7 @@
  *       See the License for the specific language governing permissions and
  *       limitations under the License.
  */
-package com.google.code.sagetvaddons.sjq.taskqueue;
+package com.google.code.sagetvaddons.sjq.network;
 
 import java.io.IOException;
 import java.util.Collection;

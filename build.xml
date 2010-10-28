@@ -71,8 +71,8 @@
   <target name="build" depends="javac" description="Build this project" />
 
   <target name="jars" depends="build">
-	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/shared/*,**/server/DataStore*.*,**/taskqueue/*,**/utils/*" filesonly="true" />
-  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore*.*,**/taskqueue/*,**/utils/*" filesonly="true" />
+	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/shared/*,**/server/DataStore*.*,**/sjq/network/*,**/utils/*" filesonly="true" />
+  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore*.*,**/sjq/network/*,**/utils/*" filesonly="true" />
 <!--
   	<proguard>
 		-libraryjars "${java.home}/lib/rt.jar"
@@ -168,9 +168,9 @@
   </target>
 
   <target name="javadoc">
-	<javadoc destdir="doc" excludepackagenames="com.google.code.sagetvaddons.sjq.server.commands.*,com.google.code.sagetvaddons.sjq.server.network.*">
+	<javadoc destdir="doc" excludepackagenames="com.google.code.sagetvaddons.sjq.server.commands.*">
 		<sourcefiles>
-  			<fileset dir="src" includes="**/sjq/server/DataStore.java,**/sjq/shared/*.java,**/sjq/taskqueue/*.java,**/sjq/utils/*.java" />
+  			<fileset dir="src" includes="**/sjq/server/DataStore.java,**/sjq/shared/*.java,**/sjq/taskqueue/*.java,**/sjq/utils/*.java,**/sjq/network/*.java" />
   		</sourcefiles>
 	</javadoc>
   </target>

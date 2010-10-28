@@ -13,14 +13,18 @@
  *       See the License for the specific language governing permissions and
  *       limitations under the License.
  */
-package com.google.code.sagetvaddons.sjq.server.network;
+package com.google.code.sagetvaddons.sjq.network;
 
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import sagex.SageAPI;
+import sagex.remote.rmi.RMISageAPI;
+
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
+import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
@@ -99,6 +103,43 @@ public final class AgentClient extends ListenerClient {
 		return null;
 	}
 	
+	/**
+	 * Update the settings on the connected client
+	 * @param clnt The new settings values for the client
+	 * @return True if the setting were updated successfully or false otherwise; the hostname and port settings are never updated and are ignored by the receiving client.  You cannot update the host or port settings over the network.
+	 */
+	public boolean update(Client clnt) {
+		NetworkAck ack = null;
+		try {
+			ack = sendCmd("UPDATE");
+		} catch (IOException e) {
+			LOG.error("IOError", e);
+			setIsValid(false);
+		}
+		if(ack != null && ack.isOk()) {
+			try {
+				getOut().writeObject(clnt);
+				getOut().flush();
+				ack = (NetworkAck)getIn().readObject();
+				return ack.isOk();
+			} catch (IOException e) {
+				LOG.error("IOError", e);
+				setIsValid(false);
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
+		} else if(ack != null)
+			LOG.error(ack.getMsg());
+		else
+			LOG.error("Received null ack from server!");
+		return false;
+	}
+
+	/**
+	 * Kill the given task on the client
+	 * @param qt The task to kill
+	 * @return True on success or false otherwise; false will be returned in case of any error, including if the client is not running the give task
+	 */
 	public boolean killTask(QueuedTask qt) {
 		NetworkAck ack = null;
 		try {
@@ -124,7 +165,10 @@ public final class AgentClient extends ListenerClient {
 			return false;
 		}
 	}
-	
+
+	/**
+	 * Kill all the running tasks on the client
+	 */
 	public void killAll() {
 		NetworkAck ack = null;
 		try {
@@ -146,6 +190,11 @@ public final class AgentClient extends ListenerClient {
 			LOG.error("KILLALL command rejected by agent!");
 	}
 	
+	/**
+	 * Ask the client if it's running the given task
+	 * @param qt The task to query about
+	 * @return True if the client is running the given task or false otherwise
+	 */
 	public boolean isTaskActive(QueuedTask qt) {
 		NetworkAck ack = null;
 		try {

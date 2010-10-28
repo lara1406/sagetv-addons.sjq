@@ -1,9 +1,9 @@
 <SageTVPlugin>
 	<Name>sjq-common</Name>
 	<Identifier>sjq-common</Identifier>
-	<Description>
+	<Description><![CDATA[
 SJQv4 common classes; do not install manually.
-	</Description>
+	]]></Description>
 	<Author>Slugger</Author>
 	<CreationDate>2007.05.02</CreationDate>
 	<ModificationDate>@@MOD_DATE@@</ModificationDate>
@@ -52,9 +52,4 @@ SJQv4 common classes; do not install manually.
 		<Location>http://sagetv-addons.googlecode.com/files/sjq-common-@@VER_NUM@@.@@BLD_NUM@@.zip</Location>
 		<MD5>@@COMMON_MD5@@</MD5>
 	</Package>
-	<ReleaseNotes>
-Changes since @@VER_NUM@@.@@BLD_STABLE@@
- 
-@@CHG_LOG@@ 
-	</ReleaseNotes>
 </SageTVPlugin>

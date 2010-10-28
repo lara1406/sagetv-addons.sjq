@@ -21,7 +21,7 @@ import java.io.ObjectOutputStream;
 
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
-import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
+import com.google.code.sagetvaddons.sjq.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 

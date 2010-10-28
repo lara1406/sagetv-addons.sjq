@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
+import com.google.code.sagetvaddons.sjq.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
@@ -36,7 +36,7 @@ import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
  * code, this is the class to use for manipulating the task queue.  <b>Other JVMs cannot use this
  * class to manipulate the task queue as it does not synchrnoize across processes!</b>  If you're 
  * trying to manipulate the task queue in another JVM, perhaps from a task client, then you must use
- * the {@link com.google.code.sagetvaddons.sjq.taskqueue.ServerClient} class, which interacts with the
+ * the {@link com.google.code.sagetvaddons.sjq.network.ServerClient} class, which interacts with the
  * task queue through a socket connection, which is properly synchronized across multiple processes.</p>
  * <p><b>If you interact with the task queue via this class in an external JVM then all bets are off - 
  * weird, unexpected things are probably going to happen to your task queue!</b></p>

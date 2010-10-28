@@ -1,9 +1,9 @@
 <SageTVPlugin>
 	<Name>Sage Job Queue (SJQ)</Name>
 	<Identifier>sjq</Identifier>
-	<Description>
+	<Description><![CDATA[
 SJQv4
-	</Description>
+	]]></Description>
 	<Author>Slugger</Author>
 	<CreationDate>2007.05.02</CreationDate>
 	<ModificationDate>@@MOD_DATE@@</ModificationDate>
@@ -59,9 +59,9 @@ SJQv4
 		<MD5>@@CONF_MD5@@</MD5>
 	</Package>
 	<ImplementationClass>com.google.code.sagetvaddons.sjq.server.Plugin</ImplementationClass>
-	<ReleaseNotes>
+	<ReleaseNotes><![CDATA[
 Changes since @@VER_NUM@@.@@BLD_STABLE@@
  
 @@CHG_LOG@@ 
-	</ReleaseNotes>
+	]]></ReleaseNotes>
 </SageTVPlugin>

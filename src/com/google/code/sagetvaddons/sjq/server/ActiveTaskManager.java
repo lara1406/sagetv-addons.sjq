@@ -9,7 +9,7 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import com.google.code.sagetvaddons.sjq.server.network.AgentClient;
+import com.google.code.sagetvaddons.sjq.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 
 /**
