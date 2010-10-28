@@ -42,6 +42,10 @@ SJQv4 common classes; do not install manually.
 		<Plugin>sagex-api</Plugin>
 		<MinVersion>7.0.19</MinVersion>
 	</Dependency>
+	<Dependency>
+		<Plugin>sjq-listener</Plugin>
+		<MinVersion>4.0.0.1161</MinVersion>
+	</Dependency>
 	<PluginType>Library</PluginType>
 	<Package>
 		<PackageType>JAR</PackageType>

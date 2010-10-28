@@ -74,6 +74,7 @@ public final class Plugin implements SageTVPlugin {
 		crontab = new Scheduler();
 		crontab.setDaemon(true);
 		crontab.addTaskCollector(new CronTaskCollector());
+		API.apiNullUI.configuration.SetServerProperty("sjq4/enginePort", String.valueOf(Config.get().getPort()));
 	}
 	
 	@Override

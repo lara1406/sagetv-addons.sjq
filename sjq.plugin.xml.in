@@ -45,7 +45,7 @@ SJQv4
 	</Dependency>
 	<Dependency>
 		<Plugin>sjq-listener</Plugin>
-		<MinVersion>4.0.0.1150</MinVersion>
+		<MinVersion>4.0.0.1161</MinVersion>
 	</Dependency>
 	<PluginType>Standard</PluginType>
 	<Package>
