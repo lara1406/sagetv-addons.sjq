@@ -109,6 +109,8 @@ public final class DataStore {
 	static private final String SAVE_SETTING = "SaveSetting";
 	static private final String DELETE_TASK = "DelTask";
 
+	static private final int DB_SCHEMA = 2;
+	
 	static private boolean dbInitialized = false;
 
 	private Connection conn;
@@ -215,8 +217,27 @@ public final class DataStore {
 	}
 
 	// Upgrade the DB schema, as necessary
-	private void upgradeDb() {
-		return;
+	private void upgradeDb() throws SQLException {
+		String qry = "SELECT val FROM settings WHERE var = 'schema'";
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery(qry);
+		rs.next();
+		int schema = Integer.parseInt(rs.getString(1));
+		rs.close();
+		while(schema < DB_SCHEMA) {
+			stmt = conn.createStatement();
+			switch(schema) {
+			case 1:
+				qry = "ALTER TABLE client ADD COLUMN version INT NOT NULL DEFAULT 0";
+				stmt.executeUpdate(qry);
+				
+				qry = "UPDATE settings SET val = '2' WHERE var = 'schema'";
+				stmt.executeUpdate(qry);
+				break;
+			}
+			++schema;
+		}
+		stmt.close();
 	}
 
 	// Prep the various SQL statements used in the DataStore
@@ -226,16 +247,16 @@ public final class DataStore {
 		String qry = "SELECT val FROM settings WHERE var = ?";
 		stmts.put(READ_SETTING, conn.prepareStatement(qry));
 
-		qry = "SELECT state, schedule, last_update, total_resources FROM client WHERE host = ? AND port = ?";
+		qry = "SELECT state, schedule, last_update, total_resources, version FROM client WHERE host = ? AND port = ?";
 		stmts.put(READ_CLIENT, conn.prepareStatement(qry));
 
 		qry = "SELECT host, port FROM client";
 		stmts.put(READ_ALL_CLIENTS, conn.prepareStatement(qry));
 
-		qry = "INSERT INTO client (host, port, state, schedule, last_update, total_resources) VALUES (?, ?, ?, ?, ?, ?)";
+		qry = "INSERT INTO client (host, port, state, schedule, last_update, total_resources, version) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		stmts.put(ADD_CLIENT, conn.prepareStatement(qry));
 
-		qry = "UPDATE client SET state = ?, schedule = ?, last_update = ?, total_resources = ? WHERE host = ? AND port = ?";
+		qry = "UPDATE client SET state = ?, schedule = ?, last_update = ?, total_resources = ?, version = ? WHERE host = ? AND port = ?";
 		stmts.put(UPDATE_CLIENT, conn.prepareStatement(qry));
 
 		qry = "DELETE FROM client WHERE host = ? AND port = ?";
@@ -702,6 +723,7 @@ public final class DataStore {
 				pStmt.setString(4, clnt.getSchedule());
 				pStmt.setTimestamp(5, new java.sql.Timestamp(clnt.getLastUpdate().getTime()));
 				pStmt.setInt(6, clnt.getMaxResources());
+				pStmt.setInt(7, clnt.getVersion());
 				pStmt.executeUpdate();
 				updateClientTasks(clnt);
 				if(localTransaction)
@@ -743,8 +765,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			if(rs.next()) {
-				Client c = new Client(host, port, 0, rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), -1);
-				c.setFreeResources(getFreeResources(c));
+				Client c = new Client(host, port, getFreeResources(host, port, rs.getInt(4)), rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), rs.getInt(5));
 				return c;
 			}
 			return null;
@@ -831,13 +852,24 @@ public final class DataStore {
 	 * @return The free resources available on the given Client, c
 	 */
 	int getFreeResources(Client c) {
+		return getFreeResources(c.getHost(), c.getPort(), c.getMaxResources());
+	}
+	
+	/**
+	 * Calculate the free resources for the given client at the time of this call
+	 * @param host The hostname
+	 * @param port The port
+	 * @param maxResources The max resources for the client
+	 * @return The free resources available on the given client at the time of the call
+	 */
+	int getFreeResources(String host, int port, int maxResources) {
 		PreparedStatement pStmt = stmts.get(GET_USED_RESOURCES);
 		ResultSet rs = null;
 		try {
-			pStmt.setString(1, c.getHost());
-			pStmt.setInt(2, c.getPort());
+			pStmt.setString(1, host);
+			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
-			int freeRes = c.getMaxResources();
+			int freeRes = maxResources;
 			if(rs.next())
 				freeRes -= rs.getInt(1);
 			return freeRes; 
@@ -862,8 +894,9 @@ public final class DataStore {
 			pStmt.setString(2, clnt.getSchedule());
 			pStmt.setTimestamp(3, new java.sql.Timestamp(clnt.getLastUpdate().getTime()));
 			pStmt.setInt(4, clnt.getMaxResources());
-			pStmt.setString(5, clnt.getHost());
-			pStmt.setInt(6, clnt.getPort());
+			pStmt.setInt(5, clnt.getVersion());
+			pStmt.setString(6, clnt.getHost());
+			pStmt.setInt(7, clnt.getPort());
 			pStmt.executeUpdate();
 			updateClientTasks(clnt);
 			if(localTransaction)
