@@ -78,6 +78,14 @@ public final class Client implements Serializable {
 	}
 
 	/**
+	 * Constructor to be used when creating a new Client that uses the default port
+	 * @param host The host where this task client is running
+	 */
+	public Client(String host) {
+		this(host, DEFAULT_PORT);
+	}
+	
+	/**
 	 * Constructor to be used when creating a new Client to be registered
 	 * @param host The host where this task client is running
 	 * @param port The port number the task client is listening on
