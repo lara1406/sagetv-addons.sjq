@@ -159,6 +159,7 @@ public final class Plugin implements SageTVPlugin {
 		}, 15000, 30000);
 		timer.schedule(new AgentManager(), 15000, 120000);
 		timer.schedule(new ActiveTaskManager(), 45000, 60000);
+		timer.schedule(new TaskQueueCleaner(), 60000, 1200000);
 		LOG.info("SJQ timer thread has been started!");
 		
 		// Start the server agent

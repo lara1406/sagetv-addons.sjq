@@ -108,6 +108,7 @@ public final class DataStore {
 	static private final String DELETE_SETTING = "DelSetting";
 	static private final String SAVE_SETTING = "SaveSetting";
 	static private final String DELETE_TASK = "DelTask";
+	static private final String CLEAN_QUEUE = "CleanQueue";
 
 	static private final int DB_SCHEMA = 2;
 	
@@ -203,6 +204,9 @@ public final class DataStore {
 		s.executeUpdate(qry);
 
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_by_clnt AS SELECT host, port, SUM(active) AS active FROM active_cnt_for_clnt_by_task GROUP BY (host, port)";
+		s.executeUpdate(qry);
+		
+		qry = "CREATE INDEX IF NOT EXISTS finished__queue ON queue(finished)";
 		s.executeUpdate(qry);
 
 		qry = "INSERT INTO settings (var, val) VALUES ('schema', '1')";
@@ -315,6 +319,9 @@ public final class DataStore {
 
 		qry = "DELETE FROM queue WHERE id = ? AND state IN ('WAITING', 'RETURNED', 'FAILED')";
 		stmts.put(DELETE_TASK, conn.prepareStatement(qry));
+		
+		qry = "DELETE FROM queue WHERE DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state IN ('COMPLETED', 'SKIPPED', 'FAILED')";
+		stmts.put(CLEAN_QUEUE, conn.prepareStatement(qry));
 	}
 
 	/**
@@ -1123,5 +1130,15 @@ public final class DataStore {
 				tasks.add(qt);
 		}
 		return tasks.toArray(new QueuedTask[tasks.size()]);
+	}
+	
+	void cleanCompletedTasks(int days) {
+		PreparedStatement pStmt = stmts.get(CLEAN_QUEUE);
+		try {
+			pStmt.setLong(1, 24L * days);
+			LOG.info("Cleaned up " + pStmt.executeUpdate() + " row(s) from task queue!");
+		} catch(SQLException e) {
+			LOG.error(SQL_ERROR, e);
+		}
 	}
 }
