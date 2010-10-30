@@ -47,6 +47,7 @@ final public class AgentManager extends TimerTask {
 		try {
 			agent = new AgentClient(c);
 			clnt = agent.ping();
+			clnt.setHost(c.getHost());
 			String clntId = clnt.getHost() + ":" + clnt.getPort();
 			DEAD_CLNTS.remove(clntId);
 			if(clnt.getVersion() >= Config.get().getMinClientVersion()) {
