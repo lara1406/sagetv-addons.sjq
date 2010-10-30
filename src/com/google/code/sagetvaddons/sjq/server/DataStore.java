@@ -1107,4 +1107,21 @@ public final class DataStore {
 		}
 		return map;
 	}
+
+	/**
+	 * Get an array of tasks currently running on the given Client
+	 * @param clnt The client to get active tasks for
+	 * @return An array of tasks actively running on the given Client
+	 */
+	public QueuedTask[] getActiveTasksForClient(Client clnt) {
+		if(clnt == null)
+			return new QueuedTask[0];
+		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
+		for(QueuedTask qt : getActiveQueue()) {
+			Client assignee = qt.getAssignee();
+			if(clnt.getHost().equals(assignee.getHost()) && clnt.getPort() == assignee.getPort())
+				tasks.add(qt);
+		}
+		return tasks.toArray(new QueuedTask[tasks.size()]);
+	}
 }
