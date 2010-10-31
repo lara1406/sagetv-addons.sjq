@@ -193,7 +193,7 @@ public class Task implements Serializable {
 		return executable;
 	}
 	/**
-	 * @param executable the executable to set
+	 * @param executable the executable to set; cannot be null nor zero length
 	 */
 	public void setExecutable(String executable) {
 		this.executable = executable;
@@ -236,7 +236,7 @@ public class Task implements Serializable {
 	}
 
 	/**
-	 * @param maxTime the maxTime to set
+	 * @param maxTime the maxTime to set, in seconds; must be greater than zero
 	 */
 	public void setMaxTime(long maxTime) {
 		this.maxTime = maxTime;
@@ -250,7 +250,7 @@ public class Task implements Serializable {
 	}
 
 	/**
-	 * @param maxTimeRatio the maxTimeRatio to set
+	 * @param maxTimeRatio the maxTimeRatio to set; currently not implemented, but will be; value must be greater than zero
 	 */
 	public void setMaxTimeRatio(float maxTimeRatio) {
 		this.maxTimeRatio = maxTimeRatio;
@@ -264,7 +264,7 @@ public class Task implements Serializable {
 	}
 
 	/**
-	 * @param minReturnCode the minReturnCode to set
+	 * @param minReturnCode the minReturnCode to set; cannot be negative
 	 */
 	public void setMinReturnCode(int minReturnCode) {
 		this.minReturnCode = minReturnCode;
@@ -278,7 +278,7 @@ public class Task implements Serializable {
 	}
 
 	/**
-	 * @param maxReturnCode the maxReturnCode to set
+	 * @param maxReturnCode the maxReturnCode to set; cannot be negative, must be >= minReturnCode
 	 */
 	public void setMaxReturnCode(int maxReturnCode) {
 		this.maxReturnCode = maxReturnCode;
@@ -312,3 +312,4 @@ public class Task implements Serializable {
 		this.testArgs = testArgs;
 	}
 }
+
