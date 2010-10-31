@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.server.AgentManager;
+import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 
 /**
@@ -45,12 +46,12 @@ public class Pingc extends Command {
 	public void execute() throws IOException {
 		try {
 			Client clnt = (Client)getIn().readObject();
-			boolean result = true;
-			if(clnt != null) 
+			if(clnt != null) {
 				AgentManager.ping(clnt);
-			else
-				result = false;
-			getOut().writeObject(NetworkAck.get(result ? NetworkAck.OK : NetworkAck.ERR));
+				clnt = DataStore.get().getClient(clnt.getHost(), clnt.getPort());
+			}
+			getOut().writeObject(clnt);
+			getOut().writeObject(NetworkAck.get(NetworkAck.OK));
 			getOut().flush();
 		} catch (ClassNotFoundException e) {
 			throw new IOException(e);

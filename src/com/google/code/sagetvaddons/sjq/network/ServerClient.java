@@ -204,17 +204,20 @@ public final class ServerClient extends ListenerClient {
 	/**
 	 * Request the server pings the given client and updates its status
 	 * @param clnt The Client to be pinged by the server
-	 * @return True on success or false otherwise; this is an asynchronous command; the return value only denotes if the request was received by the server, it doesn't represent the final status of the ping
+	 * @return The updated Client or null in case of error (i.e. the client did not respond to the ping)
 	 * @throws IOException If there are network comm errors
 	 */
-	public boolean pingTaskClient(Client clnt) throws IOException {
+	public Client pingTaskClient(Client clnt) throws IOException {
 		NetworkAck ack = null;
 		ack = sendCmd("PINGC");
 		if(ack.isOk()) {
 			getOut().writeObject(clnt);
 			getOut().flush();
+			clnt = (Client)readObj();
 			ack = (NetworkAck)readObj();
-			return ack.isOk();
+			if(!ack.isOk())
+				throw new IOException("PINGC command failed on server!");
+			return clnt;
 		} else
 			throw new IOException("PINGC command rejected by server!");
 	}
