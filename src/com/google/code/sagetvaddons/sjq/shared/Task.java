@@ -145,7 +145,7 @@ public class Task implements Serializable {
 		return id;
 	}
 	/**
-	 * @param id the id to set
+	 * @param id the id to set; cannot be null, cannot be zero length, cannot contain spaces, restrict to numbers and letters
 	 */
 	public void setId(String id) {
 		this.id = id;
