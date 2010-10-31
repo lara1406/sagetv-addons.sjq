@@ -169,7 +169,7 @@ public class Task implements Serializable {
 		return maxInstances;
 	}
 	/**
-	 * @param maxInstances the maxInstances to set
+	 * @param maxInstances the maxInstances to set; cannot be negative
 	 */
 	public void setMaxInstances(int maxInstances) {
 		this.maxInstances = maxInstances;
@@ -181,7 +181,7 @@ public class Task implements Serializable {
 		return schedule;
 	}
 	/**
-	 * @param schedule the schedule to set
+	 * @param schedule the schedule to set; cannot be null, cannot be zero length
 	 */
 	public void setSchedule(String schedule) {
 		this.schedule = schedule;
@@ -312,4 +312,3 @@ public class Task implements Serializable {
 		this.testArgs = testArgs;
 	}
 }
-
