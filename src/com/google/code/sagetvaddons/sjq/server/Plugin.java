@@ -47,6 +47,15 @@ public final class Plugin implements SageTVPlugin {
 	static private final String SYS_MSG_POSTED = "SystemMessagePosted";
 	static private String[] EVENTS = new String[] {REC_STARTED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
 	
+	static public final String OPT_QUEUE_FREQ = "QueueFreq";
+	static public final String OPT_PING_FREQ = "PingFreq";
+	static public final String OPT_ACTIVE_TASK_MGR_FREQ = "AtmFreq";
+	static public final String OPT_QUEUE_CLEANER_FREQ = "QueueCleanerFreq";
+	static public final String OPT_IMPORT_TASKS = "ImportedVideosTaskList";
+	static public final String OPT_SYSMSG_TASKS = "SysMsgTaskList";
+	static public final String OPT_RECORDING_TASKS = "TvRecTaskList";
+	static private final String[] ALL_OPTS = new String[] {OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
 	 */
@@ -85,14 +94,42 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String getConfigHelpText(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+		if(OPT_QUEUE_FREQ.equals(arg0))
+			return "Determines how often, in seconds, the queue looks for unassigned tasks and attempts to assign them to a task client.  Changes to this value require a restart of the plugin.";
+		else if(OPT_PING_FREQ.equals(arg0))
+			return "Determines how often, in seconds, the engine pings registered task clients to ensure they're still alive.  Changes to this value require a restart of the plugin.";
+		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
+			return "Determines how often, in seconds, the engine validates all active tasks with their assigned task client.  Changes to this value require a restart of the plugin.";
+		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
+			return "Determines how often, in seconds, the engine cleans up old, completed entries from the task queue.  Changes to this value require a restart of the plugin.";
+		else if(OPT_IMPORT_TASKS.equals(arg0))
+			return "A comma separated list of task IDs to attach to every new imported video.";
+		else if(OPT_SYSMSG_TASKS.equals(arg0))
+			return "A comma separated list of task IDs to attach to every new generated system message.";
+		else if(OPT_RECORDING_TASKS.equals(arg0))
+			return "A comma separated list of task IDs to attach to every new TV recording that is started.";
+		else
+			return "No help available.";
 	}
 
 	@Override
 	public String getConfigLabel(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+		if(OPT_QUEUE_FREQ.equals(arg0))
+			return "Queue Frequency (seconds)";
+		else if(OPT_PING_FREQ.equals(arg0))
+			return "Task Client Ping Frequency (seconds)";
+		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
+			return "Active Task Verification Frequency (seconds)";
+		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
+			return "Queue Cleaner Frequency (seconds)";
+		else if(OPT_IMPORT_TASKS.equals(arg0))
+			return "Imported Video Task List";
+		else if(OPT_SYSMSG_TASKS.equals(arg0))
+			return "System Message Task List";
+		else if(OPT_RECORDING_TASKS.equals(arg0))
+			return "TV Recording Task List";
+		else
+			return "<No Label>";
 	}
 
 	@Override
@@ -103,20 +140,41 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String[] getConfigSettings() {
-		// TODO Auto-generated method stub
-		return null;
+		return ALL_OPTS;
 	}
 
 	@Override
 	public int getConfigType(String arg0) {
-		// TODO Auto-generated method stub
-		return 0;
+		int type;
+		if(OPT_QUEUE_FREQ.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_PING_FREQ.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else
+			type = SageTVPlugin.CONFIG_TEXT;
+		return type;
 	}
 
 	@Override
 	public String getConfigValue(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+		return DataStore.get().getSetting(arg0, getDefaultVal(arg0));
+	}
+
+	private String getDefaultVal(String arg0) {
+		if(OPT_QUEUE_FREQ.equals(arg0))
+			return "30";
+		else if(OPT_PING_FREQ.equals(arg0))
+			return "120";
+		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
+			return "60";
+		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
+			return "1200";
+		else
+			return "";
 	}
 
 	@Override
@@ -133,10 +191,35 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void setConfigValue(String arg0, String arg1) {
-		// TODO Auto-generated method stub
-		
+		checkValid(arg0, arg1);
+		DataStore.get().setSetting(arg0, arg1);
 	}
 
+	private void checkValid(String arg0, String arg1) {
+		if(OPT_QUEUE_FREQ.equals(arg0))
+			validateIntRange(arg0, 30, 300);
+		else if(OPT_PING_FREQ.equals(arg0))
+			validateIntRange(arg0, 30, 7200);
+		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
+			validateIntRange(arg0, 15, 120);
+		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
+			validateIntRange(arg0, 600, 86400);
+	}
+
+	private void validateIntRange(String val, int min, int max) {
+		final String ERR_MSG = "Input must be an integer in the range of " + min + " - " + max;
+		if(val != null) {
+			try {
+				int num = Integer.parseInt(val);
+				if(num < min || num > max)
+					throw new IllegalArgumentException(ERR_MSG);
+			} catch(NumberFormatException e) {
+				throw new IllegalArgumentException(ERR_MSG, e);
+			}
+		} else
+			throw new IllegalArgumentException(ERR_MSG);
+	}
+	
 	@Override
 	public void setConfigValues(String arg0, String[] arg1) {
 		// TODO Auto-generated method stub
@@ -156,10 +239,10 @@ public final class Plugin implements SageTVPlugin {
 				TaskQueue.get().startTasks();
 			}
 			
-		}, 15000, 30000);
-		timer.schedule(new AgentManager(), 15000, 120000);
-		timer.schedule(new ActiveTaskManager(), 45000, 60000);
-		timer.schedule(new TaskQueueCleaner(), 60000, 1200000);
+		}, 15000, 1000L * Long.parseLong(getConfigValue(OPT_QUEUE_FREQ)));
+		timer.schedule(new AgentManager(), 15000, 1000L * Long.parseLong(getConfigValue(OPT_PING_FREQ)));
+		timer.schedule(new ActiveTaskManager(), 45000, 1000L * Long.parseLong(getConfigValue(OPT_ACTIVE_TASK_MGR_FREQ)));
+		timer.schedule(new TaskQueueCleaner(), 60000, 1000L * Long.parseLong(getConfigValue(OPT_QUEUE_CLEANER_FREQ)));
 		LOG.info("SJQ timer thread has been started!");
 		
 		// Start the server agent

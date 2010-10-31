@@ -26,7 +26,6 @@ import gkusnick.sagetv.api.MediaFileAPI.MediaFile;
 
 final public class ImportedMediaTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(ImportedMediaTaskLoader.class);
-	static public final String TASK_PROP = "ImportedMediaTaskList";
 	
 	private MediaFile mf;
 	
@@ -37,7 +36,7 @@ final public class ImportedMediaTaskLoader implements TaskLoader {
 	@Override
 	public void load() {
 		if(!mf.IsTVFile()) {
-			String[] tasks = TaskList.getList(DataStore.get().getSetting(TASK_PROP, ""));
+			String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.OPT_IMPORT_TASKS, ""));
 			for(String task : tasks) {
 				try {
 					long id = TaskQueue.get().addTask(task, Factory.getMap(mf));

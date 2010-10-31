@@ -42,7 +42,7 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 	@Override
 	public void load() {
 		if(mf.IsTVFile()) {
-			String[] manTasks, favTasks;
+			String[] manTasks, favTasks, genTasks;
 			Set<String> allTasks = new HashSet<String>();
 			if(mf.GetMediaFileAiring().IsManualRecord())
 				manTasks = TaskList.getList(mf.GetMediaFileAiring().GetManualRecordProperty(TASK_PROP));
@@ -52,7 +52,8 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 				favTasks = TaskList.getList(mf.GetMediaFileAiring().GetFavoriteForAiring().GetFavoriteProperty(TASK_PROP));
 			else
 				favTasks = new String[0];
-			for(Object task : ArrayUtils.addAll(manTasks, favTasks))
+			genTasks = TaskList.getList(DataStore.get().getSetting(Plugin.OPT_RECORDING_TASKS, ""));
+			for(Object task : ArrayUtils.addAll(genTasks, ArrayUtils.addAll(manTasks, favTasks)))
 				allTasks.add(task.toString());
 			if(allTasks.size() > 0) {
 				Map<String, String> map = Factory.getMap(mf);

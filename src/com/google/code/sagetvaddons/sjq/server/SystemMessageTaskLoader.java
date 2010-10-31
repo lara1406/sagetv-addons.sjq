@@ -26,7 +26,6 @@ import gkusnick.sagetv.api.SystemMessageAPI.SystemMessage;
 
 final public class SystemMessageTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(SystemMessageTaskLoader.class);
-	static public final String TASK_PROP = "SysMsgTaskList";
 	
 	private SystemMessage msg;
 	
@@ -36,7 +35,7 @@ final public class SystemMessageTaskLoader implements TaskLoader {
 	
 	@Override
 	public void load() {
-		String[] tasks = TaskList.getList(DataStore.get().getSetting(TASK_PROP, ""));
+		String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.OPT_SYSMSG_TASKS, ""));
 		for(String task : tasks) {
 			try {
 				long id = TaskQueue.get().addTask(task, Factory.getMap(msg));
