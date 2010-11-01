@@ -16,6 +16,8 @@
 package com.google.code.sagetvaddons.sjq.shared;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -67,7 +69,7 @@ public final class Client implements Serializable {
 	private Date lastUpdate;
 	private int maxResources;
 	private int port;
-	private Task[] tasks;
+	private Collection<Task> tasks;
 	private int version;
 	
 	/**
@@ -98,7 +100,7 @@ public final class Client implements Serializable {
 		lastUpdate = new Date();
 		maxResources = DEFAULT_RESOURCES;
 		this.port = port;
-		tasks = new Task[0];
+		tasks = new ArrayList<Task>();
 		version = 0;
 	}
 	
@@ -124,7 +126,9 @@ public final class Client implements Serializable {
 		if(this.maxResources > 100)
 			this.maxResources = 100;
 		this.port = port;
-		this.tasks = tasks;
+		if(tasks != null)
+			for(Task t : tasks)
+				this.tasks.add(t);
 		this.version = version;
 	}
 
@@ -235,14 +239,37 @@ public final class Client implements Serializable {
 	 * @return the tasks
 	 */
 	public Task[] getTasks() {
-		return tasks;
+		return tasks.toArray(new Task[tasks.size()]);
 	}
 
 	/**
 	 * @param tasks the tasks to set
 	 */
 	public void setTasks(Task[] tasks) {
-		this.tasks = tasks;
+		this.tasks.clear();
+		if(tasks != null)
+			for(Task t : tasks)
+				this.tasks.add(t);
+	}
+	
+	/**
+	 * Add a new task to the Client; will NOT replace an existing task with the same taskId
+	 * @param task The new task to add
+	 * @return True if the task was added or false otherwise; will return false if argument is null or if a task with the same taskId already exists for the client
+	 */
+	public boolean addTask(Task task) {
+		if(task == null)
+			return false;
+		boolean addIt = true;
+		for(Task t : tasks) {
+			if(t.getId().equals(task.getId())) {
+				addIt = false;
+				break;
+			}
+		}
+		if(addIt)
+			tasks.add(task);
+		return addIt;
 	}
 	
 	/**

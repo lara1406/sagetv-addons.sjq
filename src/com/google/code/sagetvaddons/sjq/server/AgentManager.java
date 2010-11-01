@@ -85,7 +85,15 @@ final public class AgentManager extends TimerTask {
 	@Override
 	public void run() {
 		DataStore ds = DataStore.get();
-		for(Client c : ds.getAllClients())
-			ping(c);
+		boolean maxClients = false;
+		for(Client c : ds.getAllClients()) {
+			if(maxClients && !License.get().isLicensed()) {
+				LOG.error("Too many registered clients for unlicensed version!  Unregistering the following task client: " + c);
+				ds.deleteClient(c);
+			} else {
+				ping(c);
+				maxClients = true;
+			}
+		}
 	}
 }

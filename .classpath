@@ -11,5 +11,6 @@
 	<classpathentry kind="var" path="SAGELIB/sagex-api.jar"/>
 	<classpathentry kind="var" path="SAGELIB/somf.jar"/>
 	<classpathentry kind="var" path="SAGELIB/sjq-listener.jar"/>
+	<classpathentry kind="var" path="SAGELIB/commons-codec-1.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

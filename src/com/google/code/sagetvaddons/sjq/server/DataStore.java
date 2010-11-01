@@ -53,6 +53,7 @@ import com.google.code.sagetvaddons.sjq.shared.Task;
  */
 public final class DataStore {
 	static private final Logger LOG = Logger.getLogger(DataStore.class);
+	static final String LIC_PROP = "sjq4/isLicensed";
 	static private final ThreadLocal<DataStore> POOL = new ThreadLocal<DataStore>() {
 		@Override
 		public DataStore initialValue() {
@@ -77,9 +78,21 @@ public final class DataStore {
 	 */
 	static public final DataStore get() {
 		DataStore ds = POOL.get();
-		int retries = 5;
-		while(retries-- > 0 && !ds.isValid())
+		int retries = 15;
+		int i = 1;
+		while(retries-- > 0 && (ds == null || !ds.isValid())) {
+			LOG.warn("Problem connecting to database... trying again in " + i + " seconds...");
+			try {
+				Thread.sleep(1000L * i);
+			} catch (InterruptedException e) {
+				// Who cares?
+			}
+			i *= 2;
+			if(i > 30)
+				i = 30;
+			POOL.remove();
 			ds = POOL.get();
+		}
 		return ds;
 	}
 
@@ -611,7 +624,12 @@ public final class DataStore {
 			pStmt = stmts.get(ADD_CLNT_TASK);
 			pStmt.setString(1, clnt.getHost());
 			pStmt.setInt(2, clnt.getPort());
+			boolean maxTasks = false;
 			for(Task t : clnt.getTasks()) {
+				if(maxTasks && !isLicensed()) {
+					LOG.error("Task clients for unlicensed versions of SJQv4 can only have a single task defined.  Additional task definitions ignored!");
+					break;
+				}
 				pStmt.setInt(3, t.getRequiredResources());
 				pStmt.setInt(4, t.getMaxInstances());
 				pStmt.setString(5, t.getSchedule());
@@ -625,6 +643,7 @@ public final class DataStore {
 				pStmt.setString(13, t.getTest());
 				pStmt.setString(14, t.getTestArgs());
 				pStmt.addBatch();
+				maxTasks = true;
 			}
 			pStmt.executeBatch();
 		}
@@ -720,6 +739,10 @@ public final class DataStore {
 		if(getClient(clnt.getHost(), clnt.getPort()) != null)
 			return updateClient(clnt);
 		else {
+			if(getAllClients().length > 0 && !isLicensed()) {
+				LOG.error("Unlicensed versions of SJQv4 can only have one registered task client!  You cannot register more task clients!");
+				return false;
+			}
 			try {
 				if(clnt.getHost().equals("127.0.0.1") || clnt.getHost().toLowerCase().contains("localhost") || InetAddress.getByName(clnt.getHost()).getHostAddress().equals("127.0.0.1")) {
 					LOG.error("Specified host appears to be the loopback interface and cannot be registered as a task client in SJQv4!  Please try another hostname.");
@@ -1151,5 +1174,13 @@ public final class DataStore {
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
 		}
+	}
+	
+	/**
+	 * Determine if the user's SJQv4 engine is licensed or not
+	 * @return True if the SJQv4 engine is licensed or false otherwise
+	 */
+	public boolean isLicensed() {
+		return Boolean.parseBoolean(Configuration.GetServerProperty(LIC_PROP, "false"));
 	}
 }

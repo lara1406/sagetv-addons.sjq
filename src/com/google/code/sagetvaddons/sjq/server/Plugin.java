@@ -54,7 +54,8 @@ public final class Plugin implements SageTVPlugin {
 	static public final String OPT_IMPORT_TASKS = "ImportedVideosTaskList";
 	static public final String OPT_SYSMSG_TASKS = "SysMsgTaskList";
 	static public final String OPT_RECORDING_TASKS = "TvRecTaskList";
-	static private final String[] ALL_OPTS = new String[] {OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	static public final String OPT_EMAIL = "RegisteredEmail";
+	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
 	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
@@ -108,6 +109,8 @@ public final class Plugin implements SageTVPlugin {
 			return "A comma separated list of task IDs to attach to every new generated system message.";
 		else if(OPT_RECORDING_TASKS.equals(arg0))
 			return "A comma separated list of task IDs to attach to every new TV recording that is started.";
+		else if(OPT_EMAIL.equals(arg0))
+			return "The registered email address associated with your sagetv-addons license file.  Changes to this value require a restart of SageTV to take effect.";
 		else
 			return "No help available.";
 	}
@@ -128,6 +131,8 @@ public final class Plugin implements SageTVPlugin {
 			return "System Message Task List";
 		else if(OPT_RECORDING_TASKS.equals(arg0))
 			return "TV Recording Task List";
+		else if(OPT_EMAIL.equals(arg0))
+			return "Licensed Email Address";
 		else
 			return "<No Label>";
 	}
@@ -228,6 +233,9 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
+		// Validate the license file
+		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(License.get().isLicensed()));
+		
 		// Create the timer thread, which will run the agent pinger and the task queue threads periodically
 		if(timer != null)
 			timer.cancel();
