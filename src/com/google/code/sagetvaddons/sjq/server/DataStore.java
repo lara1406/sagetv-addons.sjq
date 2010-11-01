@@ -18,6 +18,8 @@ package com.google.code.sagetvaddons.sjq.server;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -718,6 +720,15 @@ public final class DataStore {
 		if(getClient(clnt.getHost(), clnt.getPort()) != null)
 			return updateClient(clnt);
 		else {
+			try {
+				if(clnt.getHost().equals("127.0.0.1") || clnt.getHost().toLowerCase().contains("localhost") || InetAddress.getByName(clnt.getHost()).getHostAddress().equals("127.0.0.1")) {
+					LOG.error("Specified host appears to be the loopback interface and cannot be registered as a task client in SJQv4!  Please try another hostname.");
+					return false;
+				}
+			} catch (UnknownHostException e) {
+				LOG.error("DNS Error", e);
+				return false;
+			}
 			boolean localTransaction = false;
 			PreparedStatement pStmt = stmts.get(ADD_CLIENT);
 			try {
