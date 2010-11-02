@@ -169,7 +169,7 @@
   </target>
 
   <target name="javadoc">
-	<javadoc destdir="doc" excludepackagenames="com.google.code.sagetvaddons.sjq.server.commands.*">
+	<javadoc destdir="doc" excludepackagenames="com.google.code.sagetvaddons.sjq.server.commands.*" classpathref="project.class.path">
 		<sourcefiles>
   			<fileset dir="src" includes="**/sjq/server/DataStore.java,**/sjq/shared/*.java,**/sjq/taskqueue/*.java,**/sjq/utils/*.java,**/sjq/network/*.java" />
   		</sourcefiles>
