@@ -126,6 +126,7 @@ public final class Client implements Serializable {
 		if(this.maxResources > 100)
 			this.maxResources = 100;
 		this.port = port;
+		this.tasks = new ArrayList<Task>();
 		if(tasks != null)
 			for(Task t : tasks)
 				this.tasks.add(t);
