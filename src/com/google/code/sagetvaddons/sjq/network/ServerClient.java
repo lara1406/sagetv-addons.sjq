@@ -223,6 +223,40 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	/**
+	 * Read the crontab file from the SJQ server
+	 * @return The contents of the crontab file, as a String; the String will include comment and blank lines from the file
+	 * @throws IOException In case of network errors
+	 */
+	public String readCrontab() throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("GETCRON");
+		if(ack.isOk()) {
+			return getIn().readUTF();
+		} else
+			throw new IOException("GETCRON command rejected by server!");
+	}
+	
+	/**
+	 * Save the given String as the new crontab file on the SJQ server
+	 * @param data The new contents of the crontab file
+	 * @return True on success or false otherwise
+	 * @throws IOException In case of network errors
+	 */
+	public boolean writeCrontab(String data) throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("PUTCRON");
+		if(ack.isOk()) {
+			getOut().writeUTF(data);
+			getOut().flush();
+			ack = (NetworkAck)readObj();
+			if(!ack.isOk())
+				throw new IOException("PUTCRON command failed on server!");
+			return true;
+		} else
+			throw new IOException("PUTCRON command failed on server!");
+	}
+
+	/**
 	 * Return the metadata map associated with the given QueuedTask
 	 * @param qt The task to get metadata for
 	 * @return The task's metadata.  An empty map is returned if the task has no metadata.
