@@ -7,6 +7,7 @@
   <property name="sage.libs" value="//SAGETV/SharedDocs/sagelibs/" />
   <property name="app.ver" value="4.0.0" />
   <property name="app.stable" value="971" />
+  <property name="app.agent.min" value="1208" />
   <property name="sage.jar" value="C:/Program Files/SageTV/SageTV/Sage.jar" />
   <property name="src.token" value="@@" />
   <property name="bld.dir" value="bld" />
@@ -34,7 +35,7 @@
 	  <target name="rmgensrc" description="Delete generated src files">
 	  	<delete failonerror="false" verbose="true">
 	  		<fileset dir="." includes="*.plugin.xml" />
-	  		<fileset dir="src" includes="**/Version.java" />
+	  		<fileset dir="src" includes="**/Config.java" />
 	  	</delete>
 	  </target>
 		
@@ -50,6 +51,7 @@
 	  	  	<filter token="MOD_DATE" value="${app.bld.date}"/>
 	  	  	<filter token="CHG_LOG" value="${changelog.out}"/>
 	  	  	<filter token="BLD_STABLE" value="${app.stable}"/>
+	  	  	<filter token="MIN_AGENT" value="${app.agent.min}"/>
 	  	  </filterset>
 	    </copy> 
 	  </target>

@@ -23,10 +23,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
-import sagex.remote.rmi.RMISageAPI;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
@@ -114,7 +112,7 @@ public final class ServerClient extends ListenerClient {
 	 * Delete a registered task client
 	 * @param clnt The client to be deleted
 	 * @return True on success or false otherwise; you cannot delete a task client if it is currently running tasks, false will be returned if you try to do so
-	 * @thorws IOException In case of communication errors with the server
+	 * @throws IOException In case of communication errors with the server
 	 */
 	public boolean deleteClient(Client clnt) throws IOException {
 		NetworkAck ack = null;

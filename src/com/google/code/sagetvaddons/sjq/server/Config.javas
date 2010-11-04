@@ -26,11 +26,11 @@ import org.apache.log4j.Logger;
 /**
  * A singleton implementation that stores all of the config options for the server plugin
  * @author dbattams
- * @version $Id$
+ * @version $Id: Config.java 1200 2010-11-03 19:55:24Z derek@battams.ca $
  */
 public final class Config {
 	static private final Logger LOG = Logger.getLogger(Config.class);
-	static private final int MIN_CLNT_VER = 1208;
+	static private final int MIN_CLNT_VER = @@MIN_AGENT@@;
 	static private final String DEFAULT_PROPS = "plugins/sjq/sjq4.properties";
 	static private final String REFERENCE_PROPS = "plugins/sjq/sjq4.properties.ref";
 	static private final int DEFAULT_PORT = 23347;

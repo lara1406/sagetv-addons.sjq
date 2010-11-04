@@ -57,7 +57,7 @@ SJQv4
 	</Dependency>
 	<Dependency>
 		<Plugin>sjq-agent</Plugin>
-		<MinVersion>4.0.0.1199</MinVersion>
+		<MinVersion>@@VER_NUM@@.@@MIN_AGENT@@</MinVersion>
 	</Dependency>
 	<PluginType>Standard</PluginType>
 	<Package>
