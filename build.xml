@@ -54,6 +54,19 @@
 	  	  	<filter token="MIN_AGENT" value="${app.agent.min}"/>
 	  	  </filterset>
 	    </copy> 
+	    <copy todir="." overwrite="true" verbose="true">
+	          <fileset dir=".">
+	            <include name="**/*.javas"/>
+	          </fileset>
+	          <mapper type="glob" from="*.javas" to="*.java"/>
+	          <filterset begintoken="${src.token}" endtoken="${src.token}">
+	            <filter token="VER_NUM" value="${app.ver}"/>
+	            <filter token="BLD_NUM" value="${revision.max-with-flags}"/>
+	                <filter token="RES_DIR" value="${app.res.dir}"/>
+	                <filter token="MOD_DATE" value="${app.bld.date}"/>
+	          		<filter token="MIN_AGENT" value="${app.agent.min}"/>
+	          </filterset>
+	    </copy>
 	  </target>
 
   <target name="libs" depends="gensrc">
