@@ -24,7 +24,22 @@ import java.util.Map;
  * @version $Id$
  */
 public class QueuedTask extends Task {
-
+	/**
+	 * Valid types of task output
+	 * @author dbattams
+	 *
+	 */
+	static public enum OutputType {
+		/**
+		 * Denotes output from the test execution of a task
+		 */
+		TEST,
+		/**
+		 * Denotes output from the exe execution of a task
+		 */
+		TASK
+	}
+	
 	/**
 	 * 
 	 */

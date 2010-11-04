@@ -54,7 +54,7 @@ public final class Logtest extends Command {
 			QueuedTask qt = (QueuedTask)getIn().readObject();
 			String log = getIn().readUTF();
 			NetworkAck ack = null;
-			if(DataStore.get().logOutput(qt, "TEST", log))
+			if(DataStore.get().logOutput(qt, QueuedTask.OutputType.TEST, log))
 				ack = NetworkAck.get(NetworkAck.OK);
 			else
 				ack = NetworkAck.get(NetworkAck.ERR + "Failed to write log to data store!");

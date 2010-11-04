@@ -54,7 +54,7 @@ public final class Logexe extends Command {
 			QueuedTask qt = (QueuedTask)getIn().readObject();
 			String log = getIn().readUTF();
 			NetworkAck ack = null;
-			if(DataStore.get().logOutput(qt, "TASK", log))
+			if(DataStore.get().logOutput(qt, QueuedTask.OutputType.TASK, log))
 				ack = NetworkAck.get(NetworkAck.OK);
 			else
 				ack = NetworkAck.get(NetworkAck.ERR + "Failed to write log to data store!");

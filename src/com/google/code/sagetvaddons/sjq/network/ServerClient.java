@@ -23,8 +23,10 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
+import sagex.remote.rmi.RMISageAPI;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
@@ -275,5 +277,24 @@ public final class ServerClient extends ListenerClient {
 	 */
 	public Map<String, Collection<Task>> getAllRegisteredTasks() {
 		return datastore.getAllRegisteredTasks();
+	}
+	
+	/**
+	 * Get the task output for the given queue id and type
+	 * @param qId The queue id to retrieve  task output for
+	 * @param type The type of task output to retrieve
+	 * @return The retrieved task output or the empty string in case of error
+	 */
+	public String getTaskLog(long qId, QueuedTask.OutputType type) {
+		return datastore.getTaskLog(qId, type);
+	}
+	
+	/**
+	 * Get all task output for the given queue id
+	 * @param qId The queue id to get the task output for
+	 * @return All task output for the given queue id or the empty string in case of error
+	 */
+	public String getTaskLog(long qId) {
+		return datastore.getTaskLog(qId);
 	}
 }
