@@ -16,8 +16,12 @@
 package com.google.code.sagetvaddons.sjq.network;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 
 import sagex.api.Configuration;
 import sagex.api.Global;
@@ -224,14 +228,14 @@ public final class ServerClient extends ListenerClient {
 	
 	/**
 	 * Read the crontab file from the SJQ server
-	 * @return The contents of the crontab file, as a String; the String will include comment and blank lines from the file
+	 * @return The contents of the crontab file, as a List with each element representing a line from the file; the List will include comment and blank lines from the file
 	 * @throws IOException In case of network errors
 	 */
-	public String readCrontab() throws IOException {
+	public List<String> readCrontab() throws IOException {
 		NetworkAck ack = null;
 		ack = sendCmd("GETCRON");
 		if(ack.isOk()) {
-			return getIn().readUTF();
+			return Arrays.asList(StringUtils.split(getIn().readUTF(), "\n"));
 		} else
 			throw new IOException("GETCRON command rejected by server!");
 	}
@@ -242,11 +246,11 @@ public final class ServerClient extends ListenerClient {
 	 * @return True on success or false otherwise
 	 * @throws IOException In case of network errors
 	 */
-	public boolean writeCrontab(String data) throws IOException {
+	public boolean writeCrontab(List<String> data) throws IOException {
 		NetworkAck ack = null;
 		ack = sendCmd("PUTCRON");
 		if(ack.isOk()) {
-			getOut().writeUTF(data);
+			getOut().writeUTF(StringUtils.join(data, '\n'));
 			getOut().flush();
 			ack = (NetworkAck)readObj();
 			if(!ack.isOk())
