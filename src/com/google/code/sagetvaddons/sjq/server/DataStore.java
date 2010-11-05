@@ -1190,7 +1190,7 @@ public final class DataStore {
 	 * @return All task output found or the empty string in case of error
 	 */
 	public String getTaskLog(long qId) {
-		return getTaskLog(qId, null);
+		return getTaskLog(qId, (QueuedTask.OutputType)null);
 	}
 	
 	/**
@@ -1223,5 +1223,15 @@ public final class DataStore {
 				LOG.warn(SQL_ERROR, e);
 			}
 		}
+	}
+	
+	/**
+	 * Convenience method for STVi access to specific log types
+	 * @param qId The queue id to read logs for
+	 * @param type The type of logs, must be one of the valid values of the {@see com.google.code.sagetvaddons.sjq.shared.QueuedTask.OutputType} enum
+	 * @return The requested logs, as a String, or the empty string in case of error
+	 */
+	public String getTaskLog(long qId, String type) {
+		return getTaskLog(qId, QueuedTask.OutputType.valueOf(type.toUpperCase()));
 	}
 }
