@@ -311,4 +311,109 @@ public class Task implements Serializable {
 	public void setTestArgs(String testArgs) {
 		this.testArgs = testArgs;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((exeArguments == null) ? 0 : exeArguments.hashCode());
+		result = prime * result
+				+ ((executable == null) ? 0 : executable.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + maxInstances;
+		result = prime * result + maxReturnCode;
+		result = prime * result + (int) (maxTime ^ (maxTime >>> 32));
+		result = prime * result + Float.floatToIntBits(maxTimeRatio);
+		result = prime * result + minReturnCode;
+		result = prime * result + requiredResources;
+		result = prime * result
+				+ ((schedule == null) ? 0 : schedule.hashCode());
+		result = prime * result + ((test == null) ? 0 : test.hashCode());
+		result = prime * result
+				+ ((testArgs == null) ? 0 : testArgs.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Task)) {
+			return false;
+		}
+		Task other = (Task) obj;
+		if (exeArguments == null) {
+			if (other.exeArguments != null) {
+				return false;
+			}
+		} else if (!exeArguments.equals(other.exeArguments)) {
+			return false;
+		}
+		if (executable == null) {
+			if (other.executable != null) {
+				return false;
+			}
+		} else if (!executable.equals(other.executable)) {
+			return false;
+		}
+		if (id == null) {
+			if (other.id != null) {
+				return false;
+			}
+		} else if (!id.equals(other.id)) {
+			return false;
+		}
+		if (maxInstances != other.maxInstances) {
+			return false;
+		}
+		if (maxReturnCode != other.maxReturnCode) {
+			return false;
+		}
+		if (maxTime != other.maxTime) {
+			return false;
+		}
+		if (Float.floatToIntBits(maxTimeRatio) != Float
+				.floatToIntBits(other.maxTimeRatio)) {
+			return false;
+		}
+		if (minReturnCode != other.minReturnCode) {
+			return false;
+		}
+		if (requiredResources != other.requiredResources) {
+			return false;
+		}
+		if (schedule == null) {
+			if (other.schedule != null) {
+				return false;
+			}
+		} else if (!schedule.equals(other.schedule)) {
+			return false;
+		}
+		if (test == null) {
+			if (other.test != null) {
+				return false;
+			}
+		} else if (!test.equals(other.test)) {
+			return false;
+		}
+		if (testArgs == null) {
+			if (other.testArgs != null) {
+				return false;
+			}
+		} else if (!testArgs.equals(other.testArgs)) {
+			return false;
+		}
+		return true;
+	}
 }

@@ -318,4 +318,48 @@ public final class Client implements Serializable {
 	public String getDescription() {
 		return getHost() + ":" + getPort();
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((host == null) ? 0 : host.hashCode());
+		result = prime * result + port;
+		result = prime * result + version;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Client)) {
+			return false;
+		}
+		Client other = (Client) obj;
+		if (host == null) {
+			if (other.host != null) {
+				return false;
+			}
+		} else if (!host.equals(other.host)) {
+			return false;
+		}
+		if (port != other.port) {
+			return false;
+		}
+		if (version != other.version) {
+			return false;
+		}
+		return true;
+	}
 }

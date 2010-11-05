@@ -301,5 +301,50 @@ public class QueuedTask extends Task {
 	 */
 	public void setRmiPort(int rmiPort) {
 		this.rmiPort = rmiPort;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + (int) (qId ^ (qId >>> 32));
+		result = prime * result
+				+ ((serverHost == null) ? 0 : serverHost.hashCode());
+		result = prime * result + serverPort;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!super.equals(obj)) {
+			return false;
+		}
+		if (!(obj instanceof QueuedTask)) {
+			return false;
+		}
+		QueuedTask other = (QueuedTask) obj;
+		if (qId != other.qId) {
+			return false;
+		}
+		if (serverHost == null) {
+			if (other.serverHost != null) {
+				return false;
+			}
+		} else if (!serverHost.equals(other.serverHost)) {
+			return false;
+		}
+		if (serverPort != other.serverPort) {
+			return false;
+		}
+		return true;
 	}	
 }
