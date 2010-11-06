@@ -55,7 +55,8 @@ public final class Plugin implements SageTVPlugin {
 	static public final String OPT_SYSMSG_TASKS = "SysMsgTaskList";
 	static public final String OPT_RECORDING_TASKS = "TvRecTaskList";
 	static public final String OPT_EMAIL = "RegisteredEmail";
-	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	static public final String OPT_STATE = "LicState";
+	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
 	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
@@ -111,6 +112,8 @@ public final class Plugin implements SageTVPlugin {
 			return "A comma separated list of task IDs to attach to every new TV recording that is started.";
 		else if(OPT_EMAIL.equals(arg0))
 			return "The registered email address associated with your sagetv-addons license file.  Changes to this value require a restart of SageTV to take effect.";
+		else if(OPT_STATE.equals(arg0))
+			return "This button shows the current licensing state of your SJQv4 engine plugin.  Clicking the button does nothing.";
 		else
 			return "No help available.";
 	}
@@ -133,6 +136,8 @@ public final class Plugin implements SageTVPlugin {
 			return "TV Recording Task List";
 		else if(OPT_EMAIL.equals(arg0))
 			return "Licensed Email Address";
+		else if(OPT_STATE.equals(arg0))
+			return "Licensing State of SJQv4 Engine";
 		else
 			return "<No Label>";
 	}
@@ -159,6 +164,8 @@ public final class Plugin implements SageTVPlugin {
 			type = SageTVPlugin.CONFIG_INTEGER;
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_STATE.equals(arg0))
+			type = SageTVPlugin.CONFIG_BUTTON;
 		else
 			type = SageTVPlugin.CONFIG_TEXT;
 		return type;
@@ -166,7 +173,9 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String getConfigValue(String arg0) {
-		return DataStore.get().getSetting(arg0, getDefaultVal(arg0));
+		if(!OPT_STATE.equals(arg0))
+			return DataStore.get().getSetting(arg0, getDefaultVal(arg0));
+		return DataStore.get().isLicensed() ? "Licensed" : "Unlicensed";
 	}
 
 	private String getDefaultVal(String arg0) {
