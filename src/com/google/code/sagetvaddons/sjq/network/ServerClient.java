@@ -286,6 +286,16 @@ public final class ServerClient extends ListenerClient {
 	public String getTaskLog(long qId, QueuedTask.OutputType type) {
 		return datastore.getTaskLog(qId, type);
 	}
+
+        /**
+         * Convenience method for STVi access to specific log types
+         * @param qId The queue id to read logs for
+         * @param type The type of logs, must be one of the valid values of the {@see com.google.code.sagetvaddons.sjq.shared.QueuedTask.OutputType} enum
+         * @return The requested logs, as a String, or the empty string in case of error
+         */
+	public String getTaskLog(long qId, String type) {
+		return datastore.getTaskLog(qId, type);
+	}
 	
 	/**
 	 * Get all task output for the given queue id
