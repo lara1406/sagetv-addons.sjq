@@ -362,4 +362,14 @@ public final class Client implements Serializable {
 		}
 		return true;
 	}
+	
+	/**
+	 * <p>Remove a task from the Client's list of tasks, if it exists.</p>
+	 * <p>Removes the first task that matches the one given using an equals() comparison</p>
+	 * @param t The task to be removed
+	 * @return True if a task was removed from the Client's list or false otherwise
+	 */
+	public boolean removeTask(Task t) {
+		return tasks.remove(t);
+	}
 }
