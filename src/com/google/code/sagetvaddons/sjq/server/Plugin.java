@@ -87,7 +87,6 @@ public final class Plugin implements SageTVPlugin {
 		crontab.setDaemon(true);
 		crontab.addTaskCollector(new CronTaskCollector());
 		API.apiNullUI.configuration.SetServerProperty("sjq4/enginePort", String.valueOf(Config.get().getPort()));
-		DataStore.get().setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
 	}
 	
 	@Override
@@ -244,6 +243,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
+		DataStore.get().setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
+
 		// Validate the license file
 		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(License.get().isLicensed()));
 		
