@@ -17,6 +17,8 @@ package com.google.code.sagetvaddons.sjq.shared;
 
 import java.io.Serializable;
 
+import sagex.api.Global;
+
 /**
  * A Task represents a unit of work to be performed
  * @author dbattams
@@ -142,6 +144,7 @@ public class Task implements Serializable {
 	 * @return the id
 	 */
 	public String getId() {
+		Global.DebugLog("Task.getId() called; returning '" + id + "'");
 		return id;
 	}
 	/**

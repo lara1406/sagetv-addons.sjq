@@ -1234,4 +1234,15 @@ public final class DataStore {
 	public String getTaskLog(long qId, String type) {
 		return getTaskLog(qId, QueuedTask.OutputType.valueOf(type.toUpperCase()));
 	}
+	
+	/**
+	 * Get a list of all events supported and processed by the engine
+	 * @return The array of event names that the SJQ engine currently listens for and processes
+	 */
+	public String[] getSupportedEvents() {
+		String events = getSetting("SupportedEvents");
+		if(events == null || events.length() == 0)
+			return new String[0];
+		return events.split(",");
+	}
 }

@@ -25,6 +25,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -45,7 +46,7 @@ public final class Plugin implements SageTVPlugin {
 	static private final String NEW_SEGMENT = "RecordingSegmentAdded";
 	static private final String MEDIA_IMPORTED = "MediaFileImported";
 	static private final String SYS_MSG_POSTED = "SystemMessagePosted";
-	static private String[] EVENTS = new String[] {REC_STARTED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
+	static private final String[] EVENTS = new String[] {REC_STARTED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
 	
 	static public final String OPT_QUEUE_FREQ = "QueueFreq";
 	static public final String OPT_PING_FREQ = "PingFreq";
@@ -86,6 +87,7 @@ public final class Plugin implements SageTVPlugin {
 		crontab.setDaemon(true);
 		crontab.addTaskCollector(new CronTaskCollector());
 		API.apiNullUI.configuration.SetServerProperty("sjq4/enginePort", String.valueOf(Config.get().getPort()));
+		DataStore.get().setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
 	}
 	
 	@Override
