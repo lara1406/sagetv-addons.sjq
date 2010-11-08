@@ -40,6 +40,22 @@ import com.google.code.sagetvaddons.sjq.shared.Task;
  */
 public final class ServerClient extends ListenerClient {
 	
+	/**
+	 * Test to see if the SJQv4 engine is alive and running
+	 * @return True if it is or false otherwise
+	 */
+	static public final boolean isEngineAlive() {
+		ServerClient sc = null;
+		try {
+			sc = new ServerClient();
+			return true;
+		} catch(IOException e) {
+			return false;
+		} finally {
+			if(sc != null) sc.close();
+		}
+	}
+	
 	private DataStore datastore;
 	
 	/**

@@ -71,6 +71,8 @@ public final class Plugin implements SageTVPlugin {
 	 */
 	public Plugin(SageTVPluginRegistry reg) {
 		PropertyConfigurator.configure("plugins/sjq/sjq.log4j.properties");
+		if(API.apiNullUI.global.IsClient())
+			return;
 		timer = null;
 		agent = null;
 		if(!CRONTAB.exists()) {
@@ -94,6 +96,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String getConfigHelpText(String arg0) {
+		if(API.apiNullUI.global.IsClient())
+			return null;
 		if(OPT_QUEUE_FREQ.equals(arg0))
 			return "Determines how often, in seconds, the queue looks for unassigned tasks and attempts to assign them to a task client.  Changes to this value require a restart of the plugin.";
 		else if(OPT_PING_FREQ.equals(arg0))
@@ -112,6 +116,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String getConfigLabel(String arg0) {
+		if(API.apiNullUI.global.IsClient())
+			return null;
 		if(OPT_QUEUE_FREQ.equals(arg0))
 			return "Queue Frequency (seconds)";
 		else if(OPT_PING_FREQ.equals(arg0))
@@ -136,11 +142,15 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String[] getConfigSettings() {
+		if(API.apiNullUI.global.IsClient())
+			return null;
 		return ALL_OPTS;
 	}
 
 	@Override
 	public int getConfigType(String arg0) {
+		if(API.apiNullUI.global.IsClient())
+			return 0;
 		int type;
 		if(OPT_QUEUE_FREQ.equals(arg0))
 			type = SageTVPlugin.CONFIG_INTEGER;
@@ -159,6 +169,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public String getConfigValue(String arg0) {
+		if(API.apiNullUI.global.IsClient())
+			return null;
 		if(!OPT_STATE.equals(arg0))
 			return DataStore.get().getSetting(arg0, getDefaultVal(arg0));
 		return DataStore.get().isLicensed() ? "Licensed" : "Unlicensed";
@@ -191,6 +203,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void setConfigValue(String arg0, String arg1) {
+		if(API.apiNullUI.global.IsClient())
+			return;
 		checkValid(arg0, arg1);
 		DataStore.get().setSetting(arg0, arg1);
 	}
@@ -228,6 +242,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
+		if(API.apiNullUI.global.IsClient())
+			return;
 		DataStore.get().setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
 
 		// Validate the license file
@@ -280,6 +296,8 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void stop() {
+		if(API.apiNullUI.global.IsClient())
+			return;
 		// Kill everything we started in start()
 		if(timer != null) {
 			timer.cancel();
@@ -305,6 +323,8 @@ public final class Plugin implements SageTVPlugin {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void sageEvent(String arg0, Map arg1) {
+		if(API.apiNullUI.global.IsClient())
+			return;
 		LOG.info("Event received: " + arg0);
 		TaskLoader loader = null;
 		if(arg0.matches(REC_STARTED + "|" + NEW_SEGMENT))
