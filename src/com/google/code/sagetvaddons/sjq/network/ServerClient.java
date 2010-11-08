@@ -305,4 +305,74 @@ public final class ServerClient extends ListenerClient {
 	public String getTaskLog(long qId) {
 		return datastore.getTaskLog(qId);
 	}
+	
+	/**
+	 * Attach a task to an event; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskId The task id to attach to the given event
+	 * @param eventId The event id the given task is being attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTaskToEvent(String taskId, String eventId) {
+		datastore.addTaskToEvent(taskId, eventId);	
+	}
+	
+	/**
+	 * Attach an array of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskIds An array of task ids to be attached to the given event id
+	 * @param eventId The event id the given tasks are to be attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTasksToEvent(String[] taskIds, String eventId) {
+		datastore.addTasksToEvent(taskIds, eventId);
+	}
+	
+	/**
+	 * Attach a Collection of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskIds The collection of task ids to attach to the given event id
+	 * @param eventId The event id the given tasks are to be attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTasksToEvent(Collection<String> taskIds, String eventId) {
+		datastore.addTasksToEvent(taskIds, eventId);
+	}
+	
+	/**
+	 * Remove the given task id from the given event id
+	 * @param taskId The task id to be removed
+	 * @param eventId The event from which the given task id will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTaskFromEvent(String taskId, String eventId) {
+		datastore.removeTaskFromEvent(taskId, eventId);
+	}
+	
+	/**
+	 * Remove the array of task ids from the given event id
+	 * @param taskIds The array of task ids to be removed
+	 * @param eventId The event from which the given task ids will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTasksFromEvent(String[] taskIds, String eventId) {
+		datastore.removeTasksFromEvent(taskIds, eventId);
+	}
+	
+	/**
+	 * Remove the collection of task ids from the given event id
+	 * @param taskIds The collection of task ids to be removed
+	 * @param eventId The event from which the given task ids will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTasksFromEvent(Collection<String> taskIds, String eventId) {
+		datastore.removeTasksFromEvent(taskIds, eventId);
+	}
+	
+	/**
+	 * Return an array of all task ids attached to the given event
+	 * @param eventId The event to lookup
+	 * @return The array of tasks ids attached to the given event
+	 * @throws NullPointerException If eventId is null
+	 */
+	public String[] getTasksForEvent(String eventId) {
+		return datastore.getTasksForEvent(eventId);
+	}
 }

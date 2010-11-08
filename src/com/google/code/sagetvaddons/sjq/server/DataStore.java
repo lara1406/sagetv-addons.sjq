@@ -44,6 +44,7 @@ import com.google.code.sagetvaddons.sjq.server.TaskQueue.PendingTask;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
+import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
 
 /**
@@ -1244,5 +1245,77 @@ public final class DataStore {
 		if(events == null || events.length() == 0)
 			return new String[0];
 		return events.split(",");
+	}
+	
+	/**
+	 * Attach a task to an event; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskId The task id to attach to the given event
+	 * @param eventId The event id the given task is being attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTaskToEvent(String taskId, String eventId) {
+		setSetting(eventId, TaskList.addTask(taskId, getSetting(eventId, "")));	
+	}
+	
+	/**
+	 * Attach an array of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskIds An array of task ids to be attached to the given event id
+	 * @param eventId The event id the given tasks are to be attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTasksToEvent(String[] taskIds, String eventId) {
+		for(String taskId : taskIds)
+			addTaskToEvent(taskId, eventId);
+	}
+	
+	/**
+	 * Attach a Collection of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
+	 * @param taskIds The collection of task ids to attach to the given event id
+	 * @param eventId The event id the given tasks are to be attached to
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void addTasksToEvent(Collection<String> taskIds, String eventId) {
+		addTasksToEvent(taskIds.toArray(new String[taskIds.size()]), eventId);
+	}
+	
+	/**
+	 * Remove the given task id from the given event id
+	 * @param taskId The task id to be removed
+	 * @param eventId The event from which the given task id will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTaskFromEvent(String taskId, String eventId) {
+		setSetting(eventId, TaskList.removeTask(taskId, getSetting(eventId, "")));
+	}
+	
+	/**
+	 * Remove the array of task ids from the given event id
+	 * @param taskIds The array of task ids to be removed
+	 * @param eventId The event from which the given task ids will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTasksFromEvent(String[] taskIds, String eventId) {
+		for(String taskId : taskIds)
+			removeTaskFromEvent(taskId, eventId);
+	}
+	
+	/**
+	 * Remove the collection of task ids from the given event id
+	 * @param taskIds The collection of task ids to be removed
+	 * @param eventId The event from which the given task ids will be removed from
+	 * @throws NullPointerException If either argument is null
+	 */
+	public void removeTasksFromEvent(Collection<String> taskIds, String eventId) {
+		removeTasksFromEvent(taskIds.toArray(new String[taskIds.size()]), eventId);
+	}
+	
+	/**
+	 * Return an array of all task ids attached to the given event
+	 * @param eventId The event to lookup
+	 * @return The array of tasks ids attached to the given event
+	 * @throws NullPointerException If eventId is null
+	 */
+	public String[] getTasksForEvent(String eventId) {
+		return TaskList.getList(getSetting(eventId, ""));
 	}
 }

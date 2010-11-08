@@ -35,7 +35,7 @@ final public class SystemMessageTaskLoader implements TaskLoader {
 	
 	@Override
 	public void load() {
-		String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.OPT_SYSMSG_TASKS, ""));
+		String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.SYS_MSG_POSTED, ""));
 		for(String task : tasks) {
 			try {
 				long id = TaskQueue.get().addTask(task, Factory.getMap(msg));

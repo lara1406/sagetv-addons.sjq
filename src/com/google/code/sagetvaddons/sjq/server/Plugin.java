@@ -42,22 +42,19 @@ import com.google.code.sagetvaddons.sjq.listener.Listener;
 public final class Plugin implements SageTVPlugin {
 	static private final Logger LOG = Logger.getLogger(Plugin.class);
 	
-	static private final String REC_STARTED = "RecordingStarted";
-	static private final String NEW_SEGMENT = "RecordingSegmentAdded";
-	static private final String MEDIA_IMPORTED = "MediaFileImported";
-	static private final String SYS_MSG_POSTED = "SystemMessagePosted";
+	static public final String REC_STARTED = "RecordingStarted";
+	static public final String NEW_SEGMENT = "RecordingSegmentAdded";
+	static public final String MEDIA_IMPORTED = "MediaFileImported";
+	static public final String SYS_MSG_POSTED = "SystemMessagePosted";
 	static private final String[] EVENTS = new String[] {REC_STARTED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
 	
 	static public final String OPT_QUEUE_FREQ = "QueueFreq";
 	static public final String OPT_PING_FREQ = "PingFreq";
 	static public final String OPT_ACTIVE_TASK_MGR_FREQ = "AtmFreq";
 	static public final String OPT_QUEUE_CLEANER_FREQ = "QueueCleanerFreq";
-	static public final String OPT_IMPORT_TASKS = "ImportedVideosTaskList";
-	static public final String OPT_SYSMSG_TASKS = "SysMsgTaskList";
-	static public final String OPT_RECORDING_TASKS = "TvRecTaskList";
 	static public final String OPT_EMAIL = "RegisteredEmail";
 	static public final String OPT_STATE = "LicState";
-	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_IMPORT_TASKS, OPT_SYSMSG_TASKS, OPT_RECORDING_TASKS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
 	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
@@ -105,12 +102,6 @@ public final class Plugin implements SageTVPlugin {
 			return "Determines how often, in seconds, the engine validates all active tasks with their assigned task client.  Changes to this value require a restart of the plugin.";
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			return "Determines how often, in seconds, the engine cleans up old, completed entries from the task queue.  Changes to this value require a restart of the plugin.";
-		else if(OPT_IMPORT_TASKS.equals(arg0))
-			return "A comma separated list of task IDs to attach to every new imported video.";
-		else if(OPT_SYSMSG_TASKS.equals(arg0))
-			return "A comma separated list of task IDs to attach to every new generated system message.";
-		else if(OPT_RECORDING_TASKS.equals(arg0))
-			return "A comma separated list of task IDs to attach to every new TV recording that is started.";
 		else if(OPT_EMAIL.equals(arg0))
 			return "The registered email address associated with your sagetv-addons license file.  Changes to this value require a restart of SageTV to take effect.";
 		else if(OPT_STATE.equals(arg0))
@@ -129,12 +120,6 @@ public final class Plugin implements SageTVPlugin {
 			return "Active Task Verification Frequency (seconds)";
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			return "Queue Cleaner Frequency (seconds)";
-		else if(OPT_IMPORT_TASKS.equals(arg0))
-			return "Imported Video Task List";
-		else if(OPT_SYSMSG_TASKS.equals(arg0))
-			return "System Message Task List";
-		else if(OPT_RECORDING_TASKS.equals(arg0))
-			return "TV Recording Task List";
 		else if(OPT_EMAIL.equals(arg0))
 			return "Licensed Email Address";
 		else if(OPT_STATE.equals(arg0))

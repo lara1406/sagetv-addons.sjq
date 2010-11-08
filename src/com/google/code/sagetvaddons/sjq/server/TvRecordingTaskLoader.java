@@ -52,7 +52,7 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 				favTasks = TaskList.getList(mf.GetMediaFileAiring().GetFavoriteForAiring().GetFavoriteProperty(TASK_PROP));
 			else
 				favTasks = new String[0];
-			genTasks = TaskList.getList(DataStore.get().getSetting(Plugin.OPT_RECORDING_TASKS, ""));
+			genTasks = TaskList.getList(DataStore.get().getSetting(Plugin.REC_STARTED, ""));
 			for(Object task : ArrayUtils.addAll(genTasks, ArrayUtils.addAll(manTasks, favTasks)))
 				allTasks.add(task.toString());
 			if(allTasks.size() > 0) {
