@@ -10,7 +10,7 @@ SJQv4
 	<Version beta="true">@@VER_NUM@@.@@BLD_NUM@@</Version>
 	<ResourcePath>plugins/sjq</ResourcePath>
 	<Webpage>http://sagetv-addons.googlecode.com</Webpage>
-	<!-- <ServerOnly>true</ServerOnly> -->
+	<ServerOnly>true</ServerOnly>
 	<Dependency>
 		<JVM/>
 		<MinVersion>1.5.0</MinVersion>
