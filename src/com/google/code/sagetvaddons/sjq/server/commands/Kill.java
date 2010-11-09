@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.apache.log4j.Logger;
+
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.network.AgentClient;
@@ -30,6 +32,7 @@ import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
  *
  */
 public class Kill extends Command {
+	static private final Logger LOG = Logger.getLogger(Kill.class);
 	
 	/**
 	 * @param in
@@ -47,11 +50,13 @@ public class Kill extends Command {
 		try {
 			QueuedTask qt = (QueuedTask)getIn().readObject();
 			Client clnt = qt.getAssignee();
+			LOG.info("Killing " + qt.getQueueId() + " on " + clnt);
 			boolean result;
 			if(clnt != null) {
 				AgentClient ac = null;
 				try {
 					ac = new AgentClient(clnt);
+					qt.setServerHost(ac.getLocalHost());
 					result = ac.killTask(qt);
 				} catch(IOException e) {
 					result = false;
