@@ -32,7 +32,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -749,8 +751,27 @@ public final class DataStore {
 					LOG.error("Specified host appears to be the loopback interface and cannot be registered as a task client in SJQv4!  Please try another hostname.");
 					return false;
 				}
-			} catch (UnknownHostException e) {
+			} catch(UnknownHostException e) {
 				LOG.error("DNS Error", e);
+				return false;
+			}
+			Set<String> ips = new HashSet<String>();
+			for(Client c : getAllClients()) {
+				try {
+					if(c.getPort() == clnt.getPort())
+						for(InetAddress addr : InetAddress.getAllByName(c.getHost()))
+							ips.add(addr.getHostAddress());
+				} catch (UnknownHostException e) {
+					LOG.warn("UnknownHost", e);
+				}
+			}
+			try {
+				if(ips.contains(InetAddress.getByName(clnt.getHost()).getHostAddress())) {
+					LOG.error("IP address of hostname already registered under same port and cannot be registered again!");
+					return false;
+				}
+			} catch (UnknownHostException e2) {
+				LOG.warn("UnknownHost", e2);
 				return false;
 			}
 			boolean localTransaction = false;
