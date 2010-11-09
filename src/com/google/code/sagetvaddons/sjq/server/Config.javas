@@ -124,4 +124,8 @@ public final class Config {
 		}
 		return sysMsgProps;
 	}
+	
+	public String getLogPkg() {
+		return "com.google.code.sagetvaddons.sjq.server";
+	}
 }

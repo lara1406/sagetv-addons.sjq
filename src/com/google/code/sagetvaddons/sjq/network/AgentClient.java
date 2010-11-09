@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
+import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
@@ -39,7 +40,7 @@ public final class AgentClient extends ListenerClient {
 	 * @throws IOException If there is any error connecting to the given task client
 	 */
 	public AgentClient(Client clnt) throws IOException {
-		super(clnt.getHost(), clnt.getPort());
+		super(clnt.getHost(), clnt.getPort(), Config.get().getLogPkg());
 	}
 
 	/**

@@ -44,7 +44,7 @@ SJQv4 common classes; do not install manually.
 	</Dependency>
 	<Dependency>
 		<Plugin>sjq-listener</Plugin>
-		<MinVersion>4.0.0.1227</MinVersion>
+		<MinVersion>4.0.0.1248</MinVersion>
 	</Dependency>
 	<PluginType>Library</PluginType>
 	<Package>

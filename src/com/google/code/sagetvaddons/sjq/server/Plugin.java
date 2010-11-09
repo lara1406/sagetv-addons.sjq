@@ -258,7 +258,7 @@ public final class Plugin implements SageTVPlugin {
 			public void run() {
 				try {
 					Thread.sleep(5500);
-					new Listener("com.google.code.sagetvaddons.sjq.server.commands", Config.get().getPort()).init();
+					new Listener("com.google.code.sagetvaddons.sjq.server.commands", Config.get().getPort(), Config.get().getLogPkg()).init();
 					LOG.warn("SJQ server agent has stopped!");
 				} catch (Exception e) {
 					LOG.fatal("SJQ server agent has stopped unexpectedly!", e);

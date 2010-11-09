@@ -28,6 +28,7 @@ import sagex.api.Global;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
+import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
@@ -64,7 +65,7 @@ public final class ServerClient extends ListenerClient {
 	 * @throws IOException If there was an error making the socket connection to the SJQ server
 	 */
 	public ServerClient() throws IOException {
-		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")));
+		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")), Config.get().getLogPkg());
 		datastore = DataStore.get();
 	}
 	
