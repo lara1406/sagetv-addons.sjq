@@ -39,6 +39,7 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
 
@@ -55,7 +56,7 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
  * @version $Id$
  */
 public final class DataStore {
-	static private final Logger LOG = Logger.getLogger(DataStore.class);
+	static private final Logger LOG = Logger.getLogger("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".DataStore");
 	static final String LIC_PROP = "sjq4/isLicensed";
 	static private final ThreadLocal<DataStore> POOL = new ThreadLocal<DataStore>() {
 		@Override
@@ -761,12 +762,17 @@ public final class DataStore {
 					if(c.getPort() == clnt.getPort())
 						for(InetAddress addr : InetAddress.getAllByName(c.getHost()))
 							ips.add(addr.getHostAddress());
+					else
+						LOG.info("Skipped b/c different port: " + c);
 				} catch (UnknownHostException e) {
 					LOG.warn("UnknownHost", e);
 				}
 			}
+			LOG.info("Found these registered IPs: " + ips);
 			try {
-				if(ips.contains(InetAddress.getByName(clnt.getHost()).getHostAddress())) {
+				String newIp = InetAddress.getByName(clnt.getHost()).getHostAddress();
+				LOG.info("Testing: " + clnt.getHost() + "/" + newIp);
+				if(ips.contains(newIp)) {
 					LOG.error("IP address of hostname already registered under same port and cannot be registered again!");
 					return false;
 				}
