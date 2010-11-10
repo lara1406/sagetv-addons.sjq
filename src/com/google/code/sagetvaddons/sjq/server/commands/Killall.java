@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.network.AgentClient;
+import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 
 /**
@@ -49,7 +50,7 @@ public class Killall extends Command {
 			if(clnt != null) {
 				AgentClient ac = null;
 				try {
-					ac = new AgentClient(clnt);
+					ac = new AgentClient(clnt, Config.get().getLogPkg());
 					ac.killAll();
 					result = true;
 				} catch(IOException e) {

@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
 import com.google.code.sagetvaddons.sjq.network.AgentClient;
+import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 
@@ -55,7 +56,7 @@ public class Kill extends Command {
 			if(clnt != null) {
 				AgentClient ac = null;
 				try {
-					ac = new AgentClient(clnt);
+					ac = new AgentClient(clnt, Config.get().getLogPkg());
 					qt.setServerHost(ac.getLocalHost());
 					result = ac.killTask(qt);
 				} catch(IOException e) {

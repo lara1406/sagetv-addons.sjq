@@ -45,7 +45,7 @@ final public class AgentManager extends TimerTask {
 		AgentClient agent = null;
 		Client clnt = null;
 		try {
-			agent = new AgentClient(c);
+			agent = new AgentClient(c, Config.get().getLogPkg());
 			clnt = agent.ping();
 			clnt.setHost(c.getHost());
 			String clntId = clnt.getHost() + ":" + clnt.getPort();

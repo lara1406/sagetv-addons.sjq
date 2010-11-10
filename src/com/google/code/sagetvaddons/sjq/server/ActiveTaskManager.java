@@ -32,7 +32,7 @@ final class ActiveTaskManager extends TimerTask {
 					++i;
 					AgentClient agent = null;
 					try {
-						agent = new AgentClient(qt.getAssignee());
+						agent = new AgentClient(qt.getAssignee(), Config.get().getLogPkg());
 						if(!agent.isTaskActive(qt)) {
 							qt.setState(QueuedTask.State.FAILED);
 							qt.setCompleted(new Date());

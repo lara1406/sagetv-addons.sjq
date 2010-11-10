@@ -19,9 +19,11 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import sagex.SageAPI;
+import sagex.api.Global;
+
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
-import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask.State;
@@ -37,10 +39,20 @@ public final class AgentClient extends ListenerClient {
 	/**
 	 * Construcotr
 	 * @param clnt The task client to connect to
+	 * @param logPkg The package logging should be written to; should be one of <code>com.google.code.sagetvaddons.sjq.server</code> OR <code>com.google.code.sagetvaddons.sjq.agent</code>
 	 * @throws IOException If there is any error connecting to the given task client
 	 */
+	public AgentClient(Client clnt, String logPkg) throws IOException {
+		super(clnt.getHost(), clnt.getPort(), logPkg);
+	}
+
+	/**
+	 * Construcotr
+	 * @param clnt The task client to connect to
+	 * @throws IOException If there is any error connecting to the given task client
+	 */	
 	public AgentClient(Client clnt) throws IOException {
-		super(clnt.getHost(), clnt.getPort(), Config.get().getLogPkg());
+		super(clnt.getHost(), clnt.getPort(), "com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server"));
 	}
 
 	/**

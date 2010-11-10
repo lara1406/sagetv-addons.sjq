@@ -162,7 +162,7 @@ final public class TaskQueue {
 				}
 				AgentClient agent = null;
 				try {
-					agent = new AgentClient(c);
+					agent = new AgentClient(c, Config.get().getLogPkg());
 					Client clnt = agent.ping();
 					if(clnt == null) {
 						LOG.error("Ping of online client failed, skipping: " + c);

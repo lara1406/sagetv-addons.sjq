@@ -23,12 +23,12 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
 
 import com.google.code.sagetvaddons.sjq.listener.ListenerClient;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
-import com.google.code.sagetvaddons.sjq.server.Config;
 import com.google.code.sagetvaddons.sjq.server.DataStore;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
@@ -43,12 +43,13 @@ public final class ServerClient extends ListenerClient {
 	
 	/**
 	 * Test to see if the SJQv4 engine is alive and running
+	 * @param logPkg The package to log under; should be one of <code>com.google.code.sagetvaddons.sjq.server</code> OR <code>com.google.code.sagetvaddons.sjq.agent</code>
 	 * @return True if it is or false otherwise
 	 */
-	static public final boolean isEngineAlive() {
+	static public final boolean isEngineAlive(String logPkg) {
 		ServerClient sc = null;
 		try {
-			sc = new ServerClient();
+			sc = new ServerClient(logPkg);
 			return true;
 		} catch(IOException e) {
 			return false;
@@ -62,11 +63,16 @@ public final class ServerClient extends ListenerClient {
 	/**
 	 * <p>Constructor; will connect to the SJQ server running on the SageTV server this app is associated with</p>
 	 * <p>If called outside the Sage JVM then it is expected that the sagex-api RMI provider has been properly configured before calling this constructor</p>
+	 * @param logPkg The package name of the caller; ensures logs end up in the right log file; should be <code>com.google.code.sagetvaddons.sjq.server</code> OR <code>com.google.code.sagetvaddons.sjq.agent</code>
 	 * @throws IOException If there was an error making the socket connection to the SJQ server
 	 */
-	public ServerClient() throws IOException {
-		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")), Config.get().getLogPkg());
+	public ServerClient(String logPkg) throws IOException {
+		super(Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/agent_port", "23347")), logPkg);
 		datastore = DataStore.get();
+	}
+	
+	public ServerClient() throws IOException {
+		this("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server"));
 	}
 	
 	@Override
