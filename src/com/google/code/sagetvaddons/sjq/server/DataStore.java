@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import sagex.SageAPI;
@@ -1273,7 +1274,8 @@ public final class DataStore {
 		String events = getSetting("SupportedEvents");
 		if(events == null || events.length() == 0)
 			return new String[0];
-		return events.split(",");
+		// Remove RecordingSegmentAdded because it's grouped in with RecordingStarted and should be processed internally only
+		return (String[])ArrayUtils.removeElement(events.split(","), "RecordingSegmentAdded");
 	}
 	
 	/**
