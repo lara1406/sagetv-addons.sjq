@@ -52,9 +52,11 @@ public final class Putcron extends Command {
 	@Override
 	public void execute() throws IOException {
 		String crontab = getIn().readUTF();
-		if(CRONTAB_FILE.exists())
-			CRONTAB_FILE.delete();
-		FileUtils.writeStringToFile(CRONTAB_FILE, crontab, "UTF-8");
+		synchronized(Getcron.CRONTAB_FILE) {
+			if(CRONTAB_FILE.exists())
+				CRONTAB_FILE.delete();
+			FileUtils.writeStringToFile(CRONTAB_FILE, crontab, "UTF-8");
+		}
 		getOut().writeObject(NetworkAck.get(NetworkAck.OK ));
 		getOut().flush();
 	}

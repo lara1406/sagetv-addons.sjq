@@ -50,10 +50,12 @@ public final class Getcron extends Command {
 	@Override
 	public void execute() throws IOException {
 		String crontab;
-		if(!CRONTAB_FILE.exists())
-			crontab = "";
-		else
-			crontab = FileUtils.readFileToString(CRONTAB_FILE, "UTF-8");
+		synchronized(CRONTAB_FILE) {
+			if(!CRONTAB_FILE.exists())
+				crontab = "";
+			else
+				crontab = FileUtils.readFileToString(CRONTAB_FILE, "UTF-8");
+		}
 		getOut().writeUTF(crontab);
 		getOut().flush();
 	}
