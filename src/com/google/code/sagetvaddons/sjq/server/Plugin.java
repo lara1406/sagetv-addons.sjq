@@ -241,7 +241,7 @@ public final class Plugin implements SageTVPlugin {
 
 			@Override
 			public void run() {
-				TaskQueue.get().startTasks();
+				TaskQueue.get().startTasks(false);
 			}
 			
 		}, 15000, 1000L * Long.parseLong(getConfigValue(OPT_QUEUE_FREQ)));

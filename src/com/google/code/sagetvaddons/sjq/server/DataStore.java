@@ -500,8 +500,10 @@ public final class DataStore {
 	 * Get an array of tasks that are waiting to be assigned to a client
 	 * @return The array of pending tasks
 	 */
-	PendingTask[] getPendingTasks() {
-		String qry = "SELECT id, job_id, created FROM queue WHERE state = 'WAITING' OR state = 'RETURNED'";
+	PendingTask[] getPendingTasks(boolean ignoreReturned) {
+		String qry = "SELECT id, job_id, created FROM queue WHERE state = 'WAITING'";
+		if(!ignoreReturned)
+			qry = qry.concat(" OR state = 'RETURNED'");
 		Collection<PendingTask> tasks = new ArrayList<PendingTask>();
 		Statement stmt = null;
 		ResultSet rs = null;

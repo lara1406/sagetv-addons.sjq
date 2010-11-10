@@ -116,6 +116,20 @@ final public class TaskQueue {
 		}
 	}
 	
+	static private final class QueueLauncher extends Thread {
+		
+		private boolean ignore;
+		
+		private QueueLauncher(boolean ignoreReturned) {
+			ignore = ignoreReturned;
+		}
+		
+		@Override
+		public void run() {
+			TaskQueue.get().startTasks(ignore);
+		}
+	}
+	
 	private TaskQueue() {
 		
 	}
@@ -129,7 +143,9 @@ final public class TaskQueue {
 	 */
 	synchronized public long addTask(String id, Map<String, String> metadata) throws IOException {
 		try {
-			return DataStore.get().addTask(id, metadata);
+			long qId = DataStore.get().addTask(id, metadata);
+			new QueueLauncher(true).start();
+			return qId;
 		} catch (SQLException e) {
 			throw new IOException(e);
 		}
@@ -146,11 +162,12 @@ final public class TaskQueue {
 	
 	/**
 	 * Attempt to assign all pending tasks to a client; tasks that can't be assigned are simply left alone
+	 * @param ignoreReturned If true, ignore tasks that have been returned and don't try to reassign them to a task client
 	 */
-	synchronized void startTasks() {
+	synchronized void startTasks(boolean ignoreReturned) {
 		DataStore ds = DataStore.get();
 		Config cfg = Config.get();
-		PendingTask[] tasks = ds.getPendingTasks();
+		PendingTask[] tasks = ds.getPendingTasks(ignoreReturned);
 		for(PendingTask t : tasks) {
 			QueuedTask qt = null;
 			Client assignedClnt = null;
@@ -226,7 +243,15 @@ final public class TaskQueue {
 	 * @return True if the save was successful or false on any error
 	 */
 	synchronized public boolean updateTask(QueuedTask qt) {
-		return DataStore.get().updateTask(qt);
+		boolean rc = DataStore.get().updateTask(qt);
+		switch(qt.getState()) {
+		case COMPLETED:
+		case FAILED:
+		case SKIPPED:
+		case RETURNED:
+			new QueueLauncher(true).start();
+		}
+		return rc;
 	}
 	
 	synchronized public boolean deleteClient(Client c) {
