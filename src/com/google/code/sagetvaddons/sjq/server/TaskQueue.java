@@ -213,6 +213,7 @@ final public class TaskQueue {
 					int activeInst = ds.getActiveInstances(t.getTaskId(), c);
 					if(activeInst >= task.getMaxInstances()) {
 						LOG.warn("Client is already running max instances of '" + t.getTaskId() + "'; skipping: " + c);
+						continue;
 					}
 					qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort(), Integer.parseInt(API.apiNullUI.configuration.GetServerProperty("sagex/api/RMIPort", "1098")));
 					assignedClnt = c;
