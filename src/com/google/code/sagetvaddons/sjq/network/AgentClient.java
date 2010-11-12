@@ -52,7 +52,7 @@ public final class AgentClient extends ListenerClient {
 	 * @throws IOException If there is any error connecting to the given task client
 	 */	
 	public AgentClient(Client clnt) throws IOException {
-		super(clnt.getHost(), clnt.getPort(), "com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server"));
+		super(clnt.getHost(), clnt.getPort(), "com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".listener");
 	}
 
 	/**

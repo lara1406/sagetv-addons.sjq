@@ -40,6 +40,9 @@ import com.google.code.sagetvaddons.sjq.listener.Listener;
  * @version $Id$
  */
 public final class Plugin implements SageTVPlugin {
+	static {
+		PropertyConfigurator.configure("plugins/sjq/sjq.log4j.properties");
+	}
 	static private final Logger LOG = Logger.getLogger(Plugin.class);
 	
 	static public final String REC_STARTED = "RecordingStarted";
@@ -70,7 +73,6 @@ public final class Plugin implements SageTVPlugin {
 	 * @param reg The plugin registry
 	 */
 	public Plugin(SageTVPluginRegistry reg) {
-		PropertyConfigurator.configure("plugins/sjq/sjq.log4j.properties");
 		timer = null;
 		agent = null;
 		if(!CRONTAB.exists()) {

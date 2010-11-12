@@ -43,13 +43,12 @@ public final class ServerClient extends ListenerClient {
 	
 	/**
 	 * Test to see if the SJQv4 engine is alive and running
-	 * @param logPkg The package to log under; should be one of <code>com.google.code.sagetvaddons.sjq.server</code> OR <code>com.google.code.sagetvaddons.sjq.agent</code>
 	 * @return True if it is or false otherwise
 	 */
-	static public final boolean isEngineAlive(String logPkg) {
+	static public final boolean isEngineAlive() {
 		ServerClient sc = null;
 		try {
-			sc = new ServerClient(logPkg);
+			sc = new ServerClient("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".listener");
 			return true;
 		} catch(IOException e) {
 			return false;
@@ -72,7 +71,7 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	public ServerClient() throws IOException {
-		this("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server"));
+		this("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".listener");
 	}
 	
 	@Override
