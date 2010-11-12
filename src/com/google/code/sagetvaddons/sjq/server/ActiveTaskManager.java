@@ -48,6 +48,7 @@ final class ActiveTaskManager extends TimerTask {
 				}
 			}
 		}
-		LOG.info("Validated " + i + " running task(s)!");
+		if(i > 0 || LOG.isDebugEnabled())
+			LOG.info("Validated " + i + " running task(s)!");
 	}
 }
