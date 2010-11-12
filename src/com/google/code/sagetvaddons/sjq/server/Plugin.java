@@ -197,13 +197,13 @@ public final class Plugin implements SageTVPlugin {
 
 	private void checkValid(String arg0, String arg1) {
 		if(OPT_QUEUE_FREQ.equals(arg0))
-			validateIntRange(arg0, 30, 300);
+			validateIntRange(arg1, 30, 300);
 		else if(OPT_PING_FREQ.equals(arg0))
-			validateIntRange(arg0, 30, 7200);
+			validateIntRange(arg1, 30, 7200);
 		else if(OPT_ACTIVE_TASK_MGR_FREQ.equals(arg0))
-			validateIntRange(arg0, 15, 120);
+			validateIntRange(arg1, 15, 120);
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
-			validateIntRange(arg0, 600, 86400);
+			validateIntRange(arg1, 600, 86400);
 	}
 
 	private void validateIntRange(String val, int min, int max) {
