@@ -60,7 +60,7 @@ public final class Client implements Serializable {
 	/**
 	 * The default active schedule for a task client; this value means the task client is always enabled; see the crontab docs for more details
 	 */
-	static public String DEFAULT_SCHED = "* * * * *";
+	static public String DEFAULT_SCHED = "ON";
 	
 	private String host;
 	private State state;

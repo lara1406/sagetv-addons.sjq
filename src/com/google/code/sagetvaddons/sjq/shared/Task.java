@@ -44,7 +44,7 @@ public class Task implements Serializable {
 	/**
 	 * The default task schedule, in crontab format; this value means that the task is always enabled
 	 */
-	static public final String DEFAULT_SCHED = "* * * * *";
+	static public final String DEFAULT_SCHED = "ON";
 	/**
 	 * The default exe name for a task
 	 */

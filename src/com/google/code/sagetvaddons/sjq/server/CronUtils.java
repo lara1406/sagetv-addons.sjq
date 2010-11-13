@@ -30,7 +30,12 @@ final class CronUtils {
 	 * @return True if the given pattern matches the current time or false otherwise; an invalid pattern will also return false
 	 */
 	static boolean matches(String pattern) {
-		return SchedulingPattern.validate(pattern) && new SchedulingPattern(pattern).match(System.currentTimeMillis());
+		if("ON".equals(pattern.trim().toUpperCase()))
+			return true;
+		else if("OFF".equals(pattern.trim().toUpperCase()))
+			return false;
+		else
+			return SchedulingPattern.validate(pattern) && new SchedulingPattern(pattern).match(System.currentTimeMillis());
 	}
 	
 	private CronUtils() {}
