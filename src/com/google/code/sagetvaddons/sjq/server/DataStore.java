@@ -1191,7 +1191,7 @@ public final class DataStore {
 		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
 		for(QueuedTask qt : getActiveQueue()) {
 			Client assignee = qt.getAssignee();
-			if(clnt.getHost().equals(assignee.getHost()) && clnt.getPort() == assignee.getPort())
+			if(assignee != null && clnt.getHost().equals(assignee.getHost()) && clnt.getPort() == assignee.getPort())
 				tasks.add(qt);
 		}
 		return tasks.toArray(new QueuedTask[tasks.size()]);
