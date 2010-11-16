@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import com.google.code.sagetvaddons.metadata.Factory;
 import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
+import gkusnick.sagetv.api.API;
 import gkusnick.sagetv.api.SystemMessageAPI.SystemMessage;
 
 final public class SystemMessageTaskLoader implements TaskLoader {
@@ -38,7 +39,7 @@ final public class SystemMessageTaskLoader implements TaskLoader {
 		String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.SYS_MSG_POSTED, ""));
 		for(String task : tasks) {
 			try {
-				long id = TaskQueue.get().addTask(task, Factory.getMap(msg));
+				long id = TaskQueue.get().addTask(task, Factory.getMap(API.apiNullUI.systemMessageAPI.Unwrap(msg)));
 				LOG.info("Added task '" + task + "' to queue for system message! [" + id + "]");
 			} catch (IOException e) {
 				LOG.error("Unable to add task to queue!");

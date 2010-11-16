@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import com.google.code.sagetvaddons.metadata.Factory;
 import com.google.code.sagetvaddons.sjq.utils.TaskList;
 
+import gkusnick.sagetv.api.API;
 import gkusnick.sagetv.api.MediaFileAPI.MediaFile;
 
 final public class ImportedMediaTaskLoader implements TaskLoader {
@@ -39,7 +40,7 @@ final public class ImportedMediaTaskLoader implements TaskLoader {
 			String[] tasks = TaskList.getList(DataStore.get().getSetting(Plugin.MEDIA_IMPORTED, ""));
 			for(String task : tasks) {
 				try {
-					long id = TaskQueue.get().addTask(task, Factory.getMap(mf));
+					long id = TaskQueue.get().addTask(task, Factory.getMap(API.apiNullUI.mediaFileAPI.Unwrap(mf)));
 					LOG.info("Added task '" + task + "' to task queue for imported media! [" + id + "]");
 				} catch(IOException e) {
 					LOG.error("Failed to add task to queue!");

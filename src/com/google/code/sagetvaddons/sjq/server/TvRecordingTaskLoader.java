@@ -15,6 +15,7 @@
  */
 package com.google.code.sagetvaddons.sjq.server;
 
+import gkusnick.sagetv.api.API;
 import gkusnick.sagetv.api.MediaFileAPI.MediaFile;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 			for(Object task : ArrayUtils.addAll(genTasks, ArrayUtils.addAll(manTasks, favTasks)))
 				allTasks.add(task.toString());
 			if(allTasks.size() > 0) {
-				Map<String, String> map = Factory.getMap(mf);
+				Map<String, String> map = Factory.getMap(API.apiNullUI.mediaFileAPI.Unwrap(mf));
 				TaskQueue queue = TaskQueue.get();
 				for(String task : allTasks) {
 					try {
