@@ -21,6 +21,7 @@ final class TaskQueueCleaner extends TimerTask {
 
 	@Override
 	public void run() {
-		DataStore.get().cleanCompletedTasks(1);
+		DataStore ds = DataStore.get();
+		ds.cleanCompletedTasks(Integer.parseInt(ds.getSetting(Plugin.OPT_KEEP_COMPLETED_DAYS, Plugin.getDefaultVal(Plugin.OPT_KEEP_COMPLETED_DAYS))), Integer.parseInt(ds.getSetting(Plugin.OPT_KEEP_FAILED_DAYS, Plugin.getDefaultVal(Plugin.OPT_KEEP_FAILED_DAYS))), Integer.parseInt(ds.getSetting(Plugin.OPT_KEEP_SKIPPED_DAYS, Plugin.getDefaultVal(Plugin.OPT_KEEP_SKIPPED_DAYS))));
 	}
 }

@@ -263,6 +263,17 @@ public final class ServerClient extends ListenerClient {
 	}
 	
 	/**
+	 * Schedule a delayed media scan on the SageTV server; the scan will happen within ~20 minutes; subsequent calls to this command within that 20 minute window are simply ignored.  Use this instead of Global.RunLibraryImportScan() to prevent generating a bunch of simultaneous scanning threads on the SageTV server.
+	 * @throws IOException In case of network errors
+	 */
+	public void scheduleMediaScan() throws IOException {
+		NetworkAck ack = null;
+		ack = sendCmd("SCANMEDIA");
+		if(!ack.isOk())
+			throw new IOException("SCANMEDIA command rejected by server!");
+	}
+	
+	/**
 	 * Save the given String as the new crontab file on the SJQ server
 	 * @param data The new contents of the crontab file
 	 * @return True on success or false otherwise

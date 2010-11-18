@@ -61,7 +61,7 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 				TaskQueue queue = TaskQueue.get();
 				for(String task : allTasks) {
 					try {
-						long id = queue.addTask(task, map);
+						long id = queue.addTask(task, map, 6000); // Wait 6 seconds to give time for recordings to stop, etc. on this event type
 						LOG.info("Added task '" + task + "' to queue! [" + id + "]");
 					} catch (IOException e) {
 						LOG.error("Failed to add task '" + task + "' to queue for MediaFile '" + mf.GetMediaFileID() + "'");

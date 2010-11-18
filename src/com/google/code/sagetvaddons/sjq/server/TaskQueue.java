@@ -119,14 +119,16 @@ final public class TaskQueue {
 	static private final class QueueLauncher extends Thread {
 		
 		private boolean ignore;
+		private long delayMillis;
 		
-		private QueueLauncher(boolean ignoreReturned) {
+		private QueueLauncher(long delayMillis, boolean ignoreReturned) {
 			ignore = ignoreReturned;
+			this.delayMillis = delayMillis;
 		}
 		
 		@Override
 		public void run() {
-			TaskQueue.get().startTasks(ignore);
+			TaskQueue.get().startTasks(delayMillis, ignore);
 		}
 	}
 	
@@ -138,17 +140,30 @@ final public class TaskQueue {
 	 * Add a new task to the queue
 	 * @param id The task id to be added to the queue
 	 * @param metadata The var/val pairs of environment variables to inject into this task's runtime env
+	 * @param delayMillis The amount of time to delay the QueueLauncher run
 	 * @return The new task queue id for the created task
 	 * @throws IOException Thrown if there was an error adding the task to the queue
 	 */
-	synchronized public long addTask(String id, Map<String, String> metadata) throws IOException {
+	synchronized public long addTask(String id, Map<String, String> metadata, long delayMillis) throws IOException {
 		try {
-			long qId = DataStore.get().addTask(id, metadata);
-			new QueueLauncher(true).start();
+			DataStore ds = DataStore.get();
+			long qId = ds.addTask(id, metadata);
+			new QueueLauncher(delayMillis, true).start();
 			return qId;
 		} catch (SQLException e) {
 			throw new IOException(e);
 		}
+	}
+	
+	/**
+	 * Add a new task to the queue
+	 * @param id The task id to be added to the queue
+	 * @param metadata The var/val pairs of environment variables to inject into this task's runtime env
+	 * @return The new task queue id for the created task
+	 * @throws IOException Thrown if there was an error adding the task to the queue
+	 */
+	public long addTask(String id, Map<String, String> metadata) throws IOException {
+		return addTask(id, metadata, Long.parseLong(DataStore.get().getSetting(Plugin.OPT_QUEUE_DELAY, Plugin.getDefaultVal(Plugin.OPT_QUEUE_DELAY))));
 	}
 	
 	/**
@@ -162,9 +177,17 @@ final public class TaskQueue {
 	
 	/**
 	 * Attempt to assign all pending tasks to a client; tasks that can't be assigned are simply left alone
+	 * @param delayMillis Amount of time to delay before starting, in ms; allows a quick sleep while tuners are stopped, etc. after a completed recording, for example.
 	 * @param ignoreReturned If true, ignore tasks that have been returned and don't try to reassign them to a task client
 	 */
-	synchronized void startTasks(boolean ignoreReturned) {
+	synchronized void startTasks(long delayMillis, boolean ignoreReturned) {
+		if(delayMillis > 0) {
+			try {
+				Thread.sleep(delayMillis);
+			} catch (InterruptedException e) {
+				LOG.warn("SleepError", e);
+			}
+		}
 		DataStore ds = DataStore.get();
 		Config cfg = Config.get();
 		PendingTask[] tasks = ds.getPendingTasks(ignoreReturned);
@@ -241,20 +264,30 @@ final public class TaskQueue {
 	/**
 	 * Update a task in the queue; all fields of the object are saved to the data store
 	 * @param qt The task to be updated
+	 * @param delayMillis The amount of time to delay a queue launch
 	 * @return True if the save was successful or false on any error
 	 */
-	synchronized public boolean updateTask(QueuedTask qt) {
+	synchronized public boolean updateTask(QueuedTask qt, long delayMillis) {
 		boolean rc = DataStore.get().updateTask(qt);
 		switch(qt.getState()) {
 		case COMPLETED:
 		case FAILED:
 		case SKIPPED:
 		case RETURNED:
-			new QueueLauncher(true).start();
+			new QueueLauncher(delayMillis, true).start();
 		}
 		return rc;
 	}
-	
+
+	/**
+	 * Update a task in the queue; all fields of the object are saved to the data store
+	 * @param qt The task to be updated
+	 * @return True if the save was successful or false on any error
+	 */
+	synchronized public boolean updateTask(QueuedTask qt) {
+		return updateTask(qt, Long.parseLong(DataStore.get().getSetting(Plugin.OPT_QUEUE_DELAY, Plugin.getDefaultVal(Plugin.OPT_QUEUE_DELAY))));
+	}
+
 	synchronized public boolean deleteClient(Client c) {
 		return DataStore.get().deleteClient(c);
 	}

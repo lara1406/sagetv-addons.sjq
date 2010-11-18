@@ -340,7 +340,7 @@ public final class DataStore {
 		qry = "DELETE FROM queue WHERE id = ? AND state IN ('WAITING', 'RETURNED', 'FAILED')";
 		stmts.put(DELETE_TASK, conn.prepareStatement(qry));
 		
-		qry = "DELETE FROM queue WHERE DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state IN ('COMPLETED', 'SKIPPED', 'FAILED')";
+		qry = "DELETE FROM queue WHERE (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'COMPLETED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'FAILED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'SKIPPED')";
 		stmts.put(CLEAN_QUEUE, conn.prepareStatement(qry));
 	}
 
@@ -1197,10 +1197,12 @@ public final class DataStore {
 		return tasks.toArray(new QueuedTask[tasks.size()]);
 	}
 	
-	void cleanCompletedTasks(int days) {
+	void cleanCompletedTasks(int completedDays, int failedDays, int skippedDays) {
 		PreparedStatement pStmt = stmts.get(CLEAN_QUEUE);
 		try {
-			pStmt.setLong(1, 24L * days);
+			pStmt.setLong(1, 24L * completedDays);
+			pStmt.setLong(2, 24L * failedDays);
+			pStmt.setLong(3, 24L * skippedDays);
 			LOG.info("Cleaned up " + pStmt.executeUpdate() + " row(s) from task queue!");
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);

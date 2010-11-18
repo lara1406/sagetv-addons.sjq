@@ -57,7 +57,11 @@ public final class Plugin implements SageTVPlugin {
 	static public final String OPT_QUEUE_CLEANER_FREQ = "QueueCleanerFreq";
 	static public final String OPT_EMAIL = "RegisteredEmail";
 	static public final String OPT_STATE = "LicState";
-	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	static public final String OPT_QUEUE_DELAY = "QueueDelay";
+	static public final String OPT_KEEP_COMPLETED_DAYS = "KeepCompletedDays";
+	static public final String OPT_KEEP_FAILED_DAYS = "KeepFailedDays";
+	static public final String OPT_KEEP_SKIPPED_DAYS = "KeepSkippedDays";
+	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_KEEP_COMPLETED_DAYS, OPT_KEEP_FAILED_DAYS, OPT_KEEP_SKIPPED_DAYS, OPT_QUEUE_FREQ, OPT_QUEUE_DELAY, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
 	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
@@ -108,6 +112,14 @@ public final class Plugin implements SageTVPlugin {
 			return "The registered email address associated with your sagetv-addons license file.  Changes to this value require a restart of SageTV to take effect.";
 		else if(OPT_STATE.equals(arg0))
 			return "This button shows the current licensing state of your SJQv4 engine plugin.  Clicking the button does nothing.";
+		else if(OPT_QUEUE_DELAY.equals(arg0))
+			return "Number of milliseconds the queue processor should delay before starting.  This should only be changed as directed and is mainly for debug purposes.  Most users do not need to change this value.";
+		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
+			return "Number of days to keep output from tasks that completed successfully.  This only deletes output stored in the SJQ database.";
+		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
+			return "Number of days to keep output from tasks that failed.  This only deletes output stored in the SJQ database.";
+		else if(OPT_KEEP_SKIPPED_DAYS.equals(arg0))
+			return "Number of days to keep output from tasks that were skipped.  This only deletes output stored in the SJQ database.";
 		else
 			return "No help available.";
 	}
@@ -126,6 +138,14 @@ public final class Plugin implements SageTVPlugin {
 			return "Licensed Email Address";
 		else if(OPT_STATE.equals(arg0))
 			return "Licensing State of SJQv4 Engine";
+		else if(OPT_QUEUE_DELAY.equals(arg0))
+			return "Queue Processor Delay (ms)";
+		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
+			return "Purge 'COMPLETED' Task Logs (days)";
+		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
+			return "Purge 'FAILED' Task Logs (days)";
+		else if(OPT_KEEP_SKIPPED_DAYS.equals(arg0))
+			return "Purge 'SKIPPED' Task Logs (days)";
 		else
 			return "<No Label>";
 	}
@@ -154,6 +174,14 @@ public final class Plugin implements SageTVPlugin {
 			type = SageTVPlugin.CONFIG_INTEGER;
 		else if(OPT_STATE.equals(arg0))
 			type = SageTVPlugin.CONFIG_BUTTON;
+		else if(OPT_QUEUE_DELAY.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
+		else if(OPT_KEEP_SKIPPED_DAYS.equals(arg0))
+			type = SageTVPlugin.CONFIG_INTEGER;
 		else
 			type = SageTVPlugin.CONFIG_TEXT;
 		return type;
@@ -166,7 +194,7 @@ public final class Plugin implements SageTVPlugin {
 		return DataStore.get().isLicensed() ? "Licensed" : "Unlicensed";
 	}
 
-	private String getDefaultVal(String arg0) {
+	static public String getDefaultVal(String arg0) {
 		if(OPT_QUEUE_FREQ.equals(arg0))
 			return "30";
 		else if(OPT_PING_FREQ.equals(arg0))
@@ -175,6 +203,14 @@ public final class Plugin implements SageTVPlugin {
 			return "60";
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			return "1200";
+		else if(OPT_QUEUE_DELAY.equals(arg0))
+			return "250";
+		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
+			return "7";
+		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
+			return "21";
+		else if(OPT_KEEP_SKIPPED_DAYS.equals(arg0))
+			return "1";
 		else
 			return "";
 	}
@@ -206,6 +242,14 @@ public final class Plugin implements SageTVPlugin {
 			validateIntRange(arg1, 15, 120);
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			validateIntRange(arg1, 600, 86400);
+		else if(OPT_QUEUE_DELAY.equals(arg0))
+			validateIntRange(arg1, 0, 120000);
+		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
+			validateIntRange(arg1, 1, 365);
+		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
+			validateIntRange(arg1, 1, 365);
+		else if(OPT_KEEP_SKIPPED_DAYS.equals(arg0))
+			validateIntRange(arg1, 1, 365);
 	}
 
 	private void validateIntRange(String val, int min, int max) {
@@ -243,7 +287,7 @@ public final class Plugin implements SageTVPlugin {
 
 			@Override
 			public void run() {
-				TaskQueue.get().startTasks(false);
+				TaskQueue.get().startTasks(Long.parseLong(getConfigValue(OPT_QUEUE_DELAY)), false);
 			}
 			
 		}, 15000, 1000L * Long.parseLong(getConfigValue(OPT_QUEUE_FREQ)));
