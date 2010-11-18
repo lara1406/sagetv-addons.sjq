@@ -32,12 +32,14 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
 final public class TvRecordingTaskLoader implements TaskLoader {
 	static private final Logger LOG = Logger.getLogger(TvRecordingTaskLoader.class);
 
-	static public final String TASK_PROP = "SJQ4_TASKS";
-
+	static private final String PROP_PREFIX = "SJQ4_";
+	
+	private String eventId;
 	private MediaFile mf;
 
-	TvRecordingTaskLoader(MediaFile mf) {
+	TvRecordingTaskLoader(String eventId, MediaFile mf) {
 		this.mf = mf;
+		this.eventId = eventId;
 	}
 
 	@Override
@@ -46,14 +48,14 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 			String[] manTasks, favTasks, genTasks;
 			Set<String> allTasks = new HashSet<String>();
 			if(mf.GetMediaFileAiring().IsManualRecord())
-				manTasks = TaskList.getList(mf.GetMediaFileAiring().GetManualRecordProperty(TASK_PROP));
+				manTasks = TaskList.getList(mf.GetMediaFileAiring().GetManualRecordProperty(PROP_PREFIX + eventId));
 			else
 				manTasks = new String[0];
 			if(mf.GetMediaFileAiring().IsFavorite())
-				favTasks = TaskList.getList(mf.GetMediaFileAiring().GetFavoriteForAiring().GetFavoriteProperty(TASK_PROP));
+				favTasks = TaskList.getList(mf.GetMediaFileAiring().GetFavoriteForAiring().GetFavoriteProperty(PROP_PREFIX + eventId));
 			else
 				favTasks = new String[0];
-			genTasks = TaskList.getList(DataStore.get().getSetting(Plugin.REC_STARTED, ""));
+			genTasks = TaskList.getList(DataStore.get().getSetting(eventId, ""));
 			for(Object task : ArrayUtils.addAll(genTasks, ArrayUtils.addAll(manTasks, favTasks)))
 				allTasks.add(task.toString());
 			if(allTasks.size() > 0) {
@@ -61,7 +63,7 @@ final public class TvRecordingTaskLoader implements TaskLoader {
 				TaskQueue queue = TaskQueue.get();
 				for(String task : allTasks) {
 					try {
-						long id = queue.addTask(task, map, 6000); // Wait 6 seconds to give time for recordings to stop, etc. on this event type
+						long id = queue.addTask(task, map);
 						LOG.info("Added task '" + task + "' to queue! [" + id + "]");
 					} catch (IOException e) {
 						LOG.error("Failed to add task '" + task + "' to queue for MediaFile '" + mf.GetMediaFileID() + "'");

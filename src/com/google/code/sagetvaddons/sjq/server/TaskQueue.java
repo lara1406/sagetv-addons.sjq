@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
@@ -49,6 +51,106 @@ final public class TaskQueue {
 	static private final Logger LOG = Logger.getLogger(TaskQueue.class);
 	
 	static private final TaskQueue INSTANCE = new TaskQueue();
+	
+	static private final Timer TIMER = new Timer(true);
+	static private final class QueueProcessor extends TimerTask {
+		private boolean ignoreReturned;
+		
+		private QueueProcessor(boolean ignoreReturned) {
+			this.ignoreReturned = ignoreReturned;
+		}
+		
+		@Override
+		public void run() {
+			LOG.info("Running queue processor now!");
+			synchronized(TaskQueue.class) {
+				if(!ignoreReturned) {
+					taskAll.cancel();
+					taskAll = null;
+					if(taskIgnore != null) {
+						taskIgnore.cancel();
+						taskIgnore = null;
+					}
+				} else {
+					taskIgnore.cancel();
+					taskIgnore = null;
+				}
+				DataStore ds = DataStore.get();
+				Config cfg = Config.get();
+				PendingTask[] tasks = ds.getPendingTasks(ignoreReturned);
+				for(PendingTask t : tasks) {
+					QueuedTask qt = null;
+					Client assignedClnt = null;
+					Client[] clnts = ds.getClientsForTask(t.getTaskId());
+					for(Client c : clnts) {
+						if(c.getState() != Client.State.ONLINE) {
+							LOG.info("Client offline, skipping: " + c);
+							continue;
+						}
+						AgentClient agent = null;
+						try {
+							agent = new AgentClient(c, Config.get().getLogPkg());
+							Client clnt = agent.ping();
+							if(clnt == null) {
+								LOG.error("Ping of online client failed, skipping: " + c);
+								c.setState(Client.State.OFFLINE);
+								ds.saveClient(c);
+								continue;
+							}
+							clnt.setHost(c.getHost());
+							clnt.setPort(c.getPort());
+							clnt.setState(Client.State.ONLINE);
+							ds.saveClient(clnt);
+							c = clnt;
+							if(!CronUtils.matches(c.getSchedule())) {
+								LOG.warn("Client is disabled via client schedule '" + c.getSchedule() + "';  skipping: " + c);
+								continue;
+							}
+							if(!c.handlesTask(t.getTaskId())) {
+								LOG.warn("Client no longer handles task type '" + t.getTaskId() + "'; skipping: " + c);
+								continue;
+							}
+							Task task = c.getTask(t.getTaskId());
+							if(!CronUtils.matches(task.getSchedule())) {
+								LOG.warn("Task '" + t.getTaskId() + "' is disabled on client via schedule '" + task.getSchedule() + "'; skipping: " + c);
+								continue;
+							}
+							int freeRes = ds.getFreeResources(c);
+							if(freeRes < task.getRequiredResources()) {
+								LOG.warn("Client does not have enough free resources to perform this task! [" + freeRes + " < " + task.getRequiredResources() + "]; skipping: " + c);
+								continue;
+							}
+							int activeInst = ds.getActiveInstances(t.getTaskId(), c);
+							if(activeInst >= task.getMaxInstances()) {
+								LOG.warn("Client is already running max instances of '" + t.getTaskId() + "'; skipping: " + c);
+								continue;
+							}
+							qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort(), Integer.parseInt(API.apiNullUI.configuration.GetServerProperty("sagex/api/RMIPort", "1098")));
+							assignedClnt = c;
+							if(ds.updateTask(qt)) {
+								State state = agent.exe(qt);
+								qt.setState(state);
+								ds.updateTask(qt);
+								LOG.info("Assigned task " + t.getQid() + " of type '" + t.getTaskId() + "' to " + assignedClnt);
+							} else
+								LOG.error("Failed to update data store with assigned task! [" + c + "]");
+							break;
+						} catch (IOException e) {
+							LOG.error("IOError", e);
+							continue;
+						} finally {
+							if(agent != null)
+								agent.close();
+						}
+					}
+					if(qt == null)
+						LOG.warn("No clients available to accept task of type '" + t.getTaskId() + "'");
+				}
+			}
+		}
+	}
+	static private QueueProcessor taskAll = null;
+	static private QueueProcessor taskIgnore = null;
 	
 	/**
 	 * <p>Return the TaskQueue singleton</p>
@@ -115,23 +217,7 @@ final public class TaskQueue {
 			this.created = created;
 		}
 	}
-	
-	static private final class QueueLauncher extends Thread {
 		
-		private boolean ignore;
-		private long delayMillis;
-		
-		private QueueLauncher(long delayMillis, boolean ignoreReturned) {
-			ignore = ignoreReturned;
-			this.delayMillis = delayMillis;
-		}
-		
-		@Override
-		public void run() {
-			TaskQueue.get().startTasks(delayMillis, ignore);
-		}
-	}
-	
 	private TaskQueue() {
 		
 	}
@@ -140,30 +226,18 @@ final public class TaskQueue {
 	 * Add a new task to the queue
 	 * @param id The task id to be added to the queue
 	 * @param metadata The var/val pairs of environment variables to inject into this task's runtime env
-	 * @param delayMillis The amount of time to delay the QueueLauncher run
 	 * @return The new task queue id for the created task
 	 * @throws IOException Thrown if there was an error adding the task to the queue
 	 */
-	synchronized public long addTask(String id, Map<String, String> metadata, long delayMillis) throws IOException {
+	synchronized public long addTask(String id, Map<String, String> metadata) throws IOException {
 		try {
 			DataStore ds = DataStore.get();
 			long qId = ds.addTask(id, metadata);
-			new QueueLauncher(delayMillis, true).start();
+			startTasks(true);
 			return qId;
 		} catch (SQLException e) {
 			throw new IOException(e);
 		}
-	}
-	
-	/**
-	 * Add a new task to the queue
-	 * @param id The task id to be added to the queue
-	 * @param metadata The var/val pairs of environment variables to inject into this task's runtime env
-	 * @return The new task queue id for the created task
-	 * @throws IOException Thrown if there was an error adding the task to the queue
-	 */
-	public long addTask(String id, Map<String, String> metadata) throws IOException {
-		return addTask(id, metadata, Long.parseLong(DataStore.get().getSetting(Plugin.OPT_QUEUE_DELAY, Plugin.getDefaultVal(Plugin.OPT_QUEUE_DELAY))));
 	}
 	
 	/**
@@ -177,106 +251,24 @@ final public class TaskQueue {
 	
 	/**
 	 * Attempt to assign all pending tasks to a client; tasks that can't be assigned are simply left alone
-	 * @param delayMillis Amount of time to delay before starting, in ms; allows a quick sleep while tuners are stopped, etc. after a completed recording, for example.
 	 * @param ignoreReturned If true, ignore tasks that have been returned and don't try to reassign them to a task client
 	 */
-	synchronized void startTasks(long delayMillis, boolean ignoreReturned) {
-		if(delayMillis > 0) {
-			try {
-				Thread.sleep(delayMillis);
-			} catch (InterruptedException e) {
-				LOG.warn("SleepError", e);
-			}
-		}
-		DataStore ds = DataStore.get();
-		Config cfg = Config.get();
-		PendingTask[] tasks = ds.getPendingTasks(ignoreReturned);
-		for(PendingTask t : tasks) {
-			QueuedTask qt = null;
-			Client assignedClnt = null;
-			Client[] clnts = ds.getClientsForTask(t.getTaskId());
-			for(Client c : clnts) {
-				if(c.getState() != Client.State.ONLINE) {
-					LOG.info("Client offline, skipping: " + c);
-					continue;
+	void startTasks(boolean ignoreReturned) {
+		synchronized(TaskQueue.class) { 
+			if(ignoreReturned) {
+				if(taskIgnore == null) {
+					LOG.info("Scheduling queue processor for ~8 seconds from now!");
+					taskIgnore = new QueueProcessor(true);
+					TIMER.schedule(taskIgnore, 8000);
 				}
-				AgentClient agent = null;
-				try {
-					agent = new AgentClient(c, Config.get().getLogPkg());
-					Client clnt = agent.ping();
-					if(clnt == null) {
-						LOG.error("Ping of online client failed, skipping: " + c);
-						c.setState(Client.State.OFFLINE);
-						ds.saveClient(c);
-						continue;
-					}
-					clnt.setHost(c.getHost());
-					clnt.setPort(c.getPort());
-					clnt.setState(Client.State.ONLINE);
-					ds.saveClient(clnt);
-					c = clnt;
-					if(!CronUtils.matches(c.getSchedule())) {
-						LOG.warn("Client is disabled via client schedule '" + c.getSchedule() + "';  skipping: " + c);
-						continue;
-					}
-					if(!c.handlesTask(t.getTaskId())) {
-						LOG.warn("Client no longer handles task type '" + t.getTaskId() + "'; skipping: " + c);
-						continue;
-					}
-					Task task = c.getTask(t.getTaskId());
-					if(!CronUtils.matches(task.getSchedule())) {
-						LOG.warn("Task '" + t.getTaskId() + "' is disabled on client via schedule '" + task.getSchedule() + "'; skipping: " + c);
-						continue;
-					}
-					int freeRes = ds.getFreeResources(c);
-					if(freeRes < task.getRequiredResources()) {
-						LOG.warn("Client does not have enough free resources to perform this task! [" + freeRes + " < " + task.getRequiredResources() + "]; skipping: " + c);
-						continue;
-					}
-					int activeInst = ds.getActiveInstances(t.getTaskId(), c);
-					if(activeInst >= task.getMaxInstances()) {
-						LOG.warn("Client is already running max instances of '" + t.getTaskId() + "'; skipping: " + c);
-						continue;
-					}
-					qt = new QueuedTask(task, t.getQid(), ds.getMetadata(t.getQid()), t.getCreated(), new Date(), null, QueuedTask.State.STARTED, c, agent.getLocalHost(), cfg.getPort(), Integer.parseInt(API.apiNullUI.configuration.GetServerProperty("sagex/api/RMIPort", "1098")));
-					assignedClnt = c;
-					if(ds.updateTask(qt)) {
-						State state = agent.exe(qt);
-						qt.setState(state);
-						ds.updateTask(qt);
-						LOG.info("Assigned task " + t.getQid() + " of type '" + t.getTaskId() + "' to " + assignedClnt);
-					} else
-						LOG.error("Failed to update data store with assigned task! [" + c + "]");
-					break;
-				} catch (IOException e) {
-					LOG.error("IOError", e);
-					continue;
-				} finally {
-					if(agent != null)
-						agent.close();
+			} else {
+				if(taskAll == null) {
+					LOG.info("Scheduling queue processor for ~8 seconds from now!");
+					taskAll = new QueueProcessor(false);
+					TIMER.schedule(taskAll, 8000);
 				}
 			}
-			if(qt == null)
-				LOG.warn("No clients available to accept task of type '" + t.getTaskId() + "'");
 		}
-	}
-
-	/**
-	 * Update a task in the queue; all fields of the object are saved to the data store
-	 * @param qt The task to be updated
-	 * @param delayMillis The amount of time to delay a queue launch
-	 * @return True if the save was successful or false on any error
-	 */
-	synchronized public boolean updateTask(QueuedTask qt, long delayMillis) {
-		boolean rc = DataStore.get().updateTask(qt);
-		switch(qt.getState()) {
-		case COMPLETED:
-		case FAILED:
-		case SKIPPED:
-		case RETURNED:
-			new QueueLauncher(delayMillis, true).start();
-		}
-		return rc;
 	}
 
 	/**
@@ -285,7 +277,15 @@ final public class TaskQueue {
 	 * @return True if the save was successful or false on any error
 	 */
 	synchronized public boolean updateTask(QueuedTask qt) {
-		return updateTask(qt, Long.parseLong(DataStore.get().getSetting(Plugin.OPT_QUEUE_DELAY, Plugin.getDefaultVal(Plugin.OPT_QUEUE_DELAY))));
+		boolean rc = DataStore.get().updateTask(qt);
+		switch(qt.getState()) {
+		case COMPLETED:
+		case FAILED:
+		case SKIPPED:
+		case RETURNED:
+			startTasks(true);
+		}
+		return rc;
 	}
 
 	synchronized public boolean deleteClient(Client c) {
