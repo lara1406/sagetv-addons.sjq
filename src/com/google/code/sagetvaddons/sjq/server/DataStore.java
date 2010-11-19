@@ -1281,6 +1281,17 @@ public final class DataStore {
 	}
 	
 	/**
+	 * Get a list of events that favourites and manual recordings can attach tasks to
+	 * @return The array of supported tv events
+	 */
+	public String[] getSupportedTvEvents() {
+		String events = getSetting("SupportedTvEvents");
+		if(events == null || events.length() == 0)
+			return new String[0];
+		return events.split(",");
+	}
+	
+	/**
 	 * Attach a task to an event; the event should be one of the supported engine events, but it's not enforced
 	 * @param taskId The task id to attach to the given event
 	 * @param eventId The event id the given task is being attached to

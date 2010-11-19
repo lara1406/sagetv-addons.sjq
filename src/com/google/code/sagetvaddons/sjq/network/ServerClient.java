@@ -408,4 +408,20 @@ public final class ServerClient extends ListenerClient {
 	public String[] getTasksForEvent(String eventId) {
 		return datastore.getTasksForEvent(eventId);
 	}
+	
+	/**
+	 * Return an array of events that users can attach tasks to
+	 * @return The array of supported events
+	 */
+	public String[] getSupportedEvents() {
+		return datastore.getSupportedEvents();
+	}
+
+	/**
+	 * Return an array of all events that favourites and manual recordings can attach tasks to
+	 * @return The array of supported tv events
+	 */
+	public String[] getSupportedTvEvents() {
+		return datastore.getSupportedTvEvents();
+	}
 }

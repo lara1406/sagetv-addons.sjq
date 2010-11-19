@@ -51,6 +51,7 @@ public final class Plugin implements SageTVPlugin {
 	static public final String SYS_MSG_POSTED = "SystemMessagePosted";
 	static public final String REC_STOPPED = "RecordingStopped";
 	static private final String[] EVENTS = new String[] {REC_STARTED, REC_STOPPED, NEW_SEGMENT, MEDIA_IMPORTED, SYS_MSG_POSTED};
+	static private final String[] TV_EVENTS = new String[] {REC_STARTED, REC_STOPPED};
 	
 	static public final String OPT_QUEUE_FREQ = "QueueFreq";
 	static public final String OPT_PING_FREQ = "PingFreq";
@@ -264,7 +265,9 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
-		DataStore.get().setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
+		DataStore ds = DataStore.get();
+		ds.setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
+		ds.setSetting("SupportedTvEvents", StringUtils.join(TV_EVENTS, ','));
 
 		// Validate the license file
 		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(License.get().isLicensed()));
