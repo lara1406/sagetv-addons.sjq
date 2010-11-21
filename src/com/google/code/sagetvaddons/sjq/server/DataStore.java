@@ -406,7 +406,7 @@ public final class DataStore {
 	 */
 	Task[] getTasksForClient(String host, int port) {
 		if(host == null || host.length() == 0 || port < 1)
-			throw new IllegalArgumentException("Client keys are invalid!");
+			throw new IllegalArgumentException("Client keys are invalid! ['" + String.valueOf(host) + "':" + port + "]");
 		PreparedStatement pStmt = stmts.get(READ_CLNT_TASKS);
 		ResultSet rs = null;
 		Collection<Task> tasks = new ArrayList<Task>();
