@@ -44,7 +44,6 @@ import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
 
-import com.google.code.sagetvaddons.sjq.server.TaskQueue.PendingTask;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;

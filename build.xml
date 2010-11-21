@@ -87,8 +87,8 @@
 
   <target name="jars" depends="build">
   	<copy file="src/com/google/code/sagetvaddons/sjq/server/resources/sagetv-addons.pub" todir="${bld.dir}/com/google/code/sagetvaddons/sjq/server/resources" />
-	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/shared/*,**/server/DataStore*.*,**/sjq/network/*,**/utils/*" filesonly="true" />
-  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore*.*,**/sjq/network/*,**/utils/*" filesonly="true" />
+	<jar destfile="sjq-common.jar" basedir="${bld.dir}" includes="**/shared/*,**/server/DataStore*.*,**/server/PendingTask.*,**/sjq/network/*,**/utils/*" filesonly="true" />
+  	<jar destfile="sjq.jar" basedir="${bld.dir}" excludes="**/shared/*,**/server/DataStore*.*,**/server/PendingTask.*,**/sjq/network/*,**/utils/*" filesonly="true" />
 <!--
   	<proguard>
 		-libraryjars "${java.home}/lib/rt.jar"

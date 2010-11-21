@@ -159,65 +159,6 @@ final public class TaskQueue {
 	 */
 	static final public TaskQueue get() { return INSTANCE; }
 
-	/**
-	 * Details about a pending task; a task is Pending when it's in WAITING or RETURNED state
-	 * @author dbattams
-	 *
-	 */
-	static final class PendingTask {
-		private long qId;
-		private String taskId;
-		private Date created;
-		
-		PendingTask(long qId, String taskId, Date created) {
-			this.qId = qId;
-			this.taskId = taskId;
-			this.created = created;
-		}
-
-		/**
-		 * @return the qId
-		 */
-		public long getQid() {
-			return qId;
-		}
-
-		/**
-		 * @param qId the qId to set
-		 */
-		public void setQid(long qId) {
-			this.qId = qId;
-		}
-
-		/**
-		 * @return the taskId
-		 */
-		public String getTaskId() {
-			return taskId;
-		}
-
-		/**
-		 * @param taskId the taskId to set
-		 */
-		public void setTaskId(String taskId) {
-			this.taskId = taskId;
-		}
-
-		/**
-		 * @return the created
-		 */
-		public Date getCreated() {
-			return created;
-		}
-
-		/**
-		 * @param created the created to set
-		 */
-		public void setCreated(Date created) {
-			this.created = created;
-		}
-	}
-		
 	private TaskQueue() {
 		
 	}
