@@ -336,7 +336,7 @@ public final class DataStore {
 		qry = "INSERT INTO settings (var, val) VALUES (?, ?)";
 		stmts.put(SAVE_SETTING, conn.prepareStatement(qry));
 
-		qry = "DELETE FROM queue WHERE id = ? AND state IN ('WAITING', 'RETURNED', 'FAILED')";
+		qry = "DELETE FROM queue WHERE id = ? AND state NOT IN ('STARTED', 'RUNNING')";
 		stmts.put(DELETE_TASK, conn.prepareStatement(qry));
 		
 		qry = "DELETE FROM queue WHERE (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'COMPLETED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'FAILED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'SKIPPED')";
