@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -177,13 +178,13 @@ public final class DataStore {
 		"CONSTRAINT IF NOT EXISTS var_not_empty__settings CHECK LENGTH(var) > 0)";
 		s.executeUpdate(qry);
 
-		qry = String.format("CREATE TABLE IF NOT EXISTS client (host VARCHAR(512) NOT NULL, port INTEGER NOT NULL, state VARCHAR(64) NOT NULL DEFAULT '%s', schedule VARCHAR(128) NOT NULL DEFAULT '%s', last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_resources TINYINT NOT NULL DEFAULT %d, PRIMARY KEY(host, port), " +
+		qry = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS client (host VARCHAR(512) NOT NULL, port INTEGER NOT NULL, state VARCHAR(64) NOT NULL DEFAULT '%s', schedule VARCHAR(128) NOT NULL DEFAULT '%s', last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_resources TINYINT NOT NULL DEFAULT %d, PRIMARY KEY(host, port), " +
 				"CONSTRAINT IF NOT EXISTS port_gt_zero__client CHECK port > 0, " +
 				"CONSTRAINT IF NOT EXISTS host_not_empty__client CHECK LENGTH(host) > 0, " +
 				"CONSTRAINT IF NOT EXISTS total_res_ge_zero__client CHECK total_resources >= 0)", Client.State.OFFLINE.toString(), Client.DEFAULT_SCHED, Client.DEFAULT_RESOURCES);
 		s.executeUpdate(qry);
 
-		qry = String.format("CREATE TABLE IF NOT EXISTS client_tasks (id VARCHAR(128) NOT NULL, host VARCHAR(512) NOT NULL, port INT NOT NULL, reqd_resources TINYINT NOT NULL DEFAULT %d, max_instances TINYINT NOT NULL DEFAULT %d, schedule VARCHAR(256) NOT NULL DEFAULT '%s', exe VARCHAR(255) NOT NULL, args VARCHAR(7936) NOT NULL DEFAULT '', max_time INT NOT NULL DEFAULT %d, max_time_ratio REAL NOT NULL DEFAULT %f, min_rc SMALLINT NOT NULL DEFAULT %d, max_rc SMALLINT NOT NULL DEFAULT %d, test VARCHAR(255), test_args VARCHAR(7936) NOT NULL DEFAULT '', " +
+		qry = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS client_tasks (id VARCHAR(128) NOT NULL, host VARCHAR(512) NOT NULL, port INT NOT NULL, reqd_resources TINYINT NOT NULL DEFAULT %d, max_instances TINYINT NOT NULL DEFAULT %d, schedule VARCHAR(256) NOT NULL DEFAULT '%s', exe VARCHAR(255) NOT NULL, args VARCHAR(7936) NOT NULL DEFAULT '', max_time INT NOT NULL DEFAULT %d, max_time_ratio REAL NOT NULL DEFAULT %f, min_rc SMALLINT NOT NULL DEFAULT %d, max_rc SMALLINT NOT NULL DEFAULT %d, test VARCHAR(255), test_args VARCHAR(7936) NOT NULL DEFAULT '', " +
 				"PRIMARY KEY (id, host, port), " +
 				"CONSTRAINT IF NOT EXISTS fk_client__client_tasks FOREIGN KEY (host, port) REFERENCES client (host, port) ON DELETE CASCADE, " +
 				"CONSTRAINT IF NOT EXISTS id_not_empty__client_tasks CHECK LENGTH(id) > 0, " +
@@ -1239,7 +1240,7 @@ public final class DataStore {
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
-			rs = stmt.executeQuery(String.format(qry.toString(), qId, type != null ? type.toString() : ""));
+			rs = stmt.executeQuery(String.format(Locale.US, qry.toString(), qId, type != null ? type.toString() : ""));
 			StringBuilder out = new StringBuilder();
 			while(rs.next())
 				out.append(rs.getString(1));
