@@ -40,11 +40,11 @@ SJQv4 common classes; do not install manually.
 	</Dependency>
 	<Dependency>
 		<Plugin>somf</Plugin>
-		<MinVersion>1.0.0.1285</MinVersion>
+		<MinVersion>1.0.0.1308</MinVersion>
 	</Dependency>
 	<Dependency>
 		<Plugin>sagex-api</Plugin>
-		<MinVersion>7.0.19</MinVersion>
+		<MinVersion>7.0.23.2</MinVersion>
 	</Dependency>
 	<Dependency>
 		<Plugin>sjq-listener</Plugin>

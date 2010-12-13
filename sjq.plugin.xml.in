@@ -53,7 +53,7 @@ SJQv4
 	</Dependency>
 	<Dependency>
 		<Plugin>sagex-api-services</Plugin>
-		<MinVersion>7.0.18</MinVersion>
+		<MinVersion>7.0.23.2</MinVersion>
 	</Dependency>
 	<PluginType>Standard</PluginType>
 	<Package>
