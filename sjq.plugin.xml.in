@@ -2,7 +2,13 @@
 	<Name>Sage Job Queue (SJQ)</Name>
 	<Identifier>sjq</Identifier>
 	<Description><![CDATA[
-SJQv4
+SJQ allows users to selectively perform tasks on any and all SageTV objects.
+
+NOTE: SJQv4 requires a sagetv-addons license to unlock all features.  If you're upgrading from SJQv3 then you will require a license file to unlock all features.  DO NOT UPGRADE IF YOU DO NOT WISH TO DONATE.  THERE IS NO DOWNGRADE OPTION AVAILABLE IN SAGETV FOR PLUGINS SO ONCE YOU UPGRADE YOU ARE COMMITTED TO VERSION 4!!
+
+SJQ can be used to selectively perform various tasks on your SageTV objects.  The most common use is to selectively perform comskip on recordings known to have commercials while ignoring recordings from channels known not to have commercials (HBO, PBS, PPV, etc.).
+ 
+Please see the user's guide for all the details, including common usage setup and examples.
 	]]></Description>
 	<Author>Slugger</Author>
 	<CreationDate>2007.05.02</CreationDate>
@@ -10,6 +16,8 @@ SJQv4
 	<Version beta="true">@@VER_NUM@@.@@BLD_NUM@@</Version>
 	<ResourcePath>plugins/sjq</ResourcePath>
 	<Webpage>http://sagetv-addons.googlecode.com</Webpage>
+	<Webpage>http://code.google.com/p/sagetv-addons/wiki/Sjq4UserGuide</Webpage>
+	<Webpage>http://code.google.com/p/sagetv-addons/wiki/DonationsFaq</Webpage>
 	<ServerOnly>true</ServerOnly>
 	<Dependency>
 		<JVM/>
