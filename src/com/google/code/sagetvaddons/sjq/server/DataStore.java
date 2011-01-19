@@ -335,7 +335,7 @@ public final class DataStore {
 		qry = "SELECT log FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(READ_LOG, conn.prepareStatement(qry));
 
-		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args, t.show_icon FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ? AND t.host IS NOT NULL";
+		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ? AND t.host IS NOT NULL";
 		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
 
 		qry = "DELETE FROM settings WHERE var = ?";
@@ -423,7 +423,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			while(rs.next())
-				tasks.add(new Task(rs.getString(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getLong(7), rs.getFloat(8), rs.getInt(9), rs.getInt(10), rs.getString(11), rs.getString(12), rs.getBoolean(13)));
+				tasks.add(new Task(rs.getString(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getLong(7), rs.getFloat(8), rs.getInt(9), rs.getInt(10), rs.getString(11), rs.getString(12), false));
 			return tasks.toArray(new Task[tasks.size()]);
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
