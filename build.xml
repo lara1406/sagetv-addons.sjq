@@ -7,7 +7,7 @@
   <property name="sage.libs" value="//SAGETV/SharedDocs/sagelibs/" />
   <property name="app.ver" value="4.0.0" />
   <property name="app.stable" value="1319" />
-  <property name="app.agent.min" value="1331" />
+  <property name="app.agent.min" value="1335" />
   <property name="sage.jar" value="C:/Program Files/SageTV/SageTV/Sage.jar" />
   <property name="src.token" value="@@" />
   <property name="bld.dir" value="bld" />
