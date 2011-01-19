@@ -28,7 +28,9 @@ final class ActiveTaskManager extends TimerTask {
 		synchronized(TaskQueue.get()) {
 			DataStore ds = DataStore.get();
 			for(QueuedTask qt : ds.getActiveQueue()) {
-				if(qt.getState() == QueuedTask.State.RUNNING) {
+				if(qt.getState() == QueuedTask.State.RUNNING || qt.getState() == QueuedTask.State.STARTED) {
+					if(qt.getState() == QueuedTask.State.STARTED && System.currentTimeMillis() - qt.getStarted().getTime() < 30000) // Skip tasks that were just assigned; give the client 30 seconds to update the state
+						continue;
 					++i;
 					AgentClient agent = null;
 					try {
