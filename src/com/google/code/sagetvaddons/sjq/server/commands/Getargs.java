@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010-2011 Battams, Derek
+ *      Copyright 2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -21,27 +21,24 @@ import java.io.ObjectOutputStream;
 
 import com.google.code.sagetvaddons.sjq.listener.Command;
 import com.google.code.sagetvaddons.sjq.listener.NetworkAck;
-import com.google.code.sagetvaddons.sjq.server.DataStore;
-import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
+import com.google.code.sagetvaddons.sjq.server.TaskQueue;
 
 /**
- * <p>Provides the ability to log task output for an executed task</p>
+ * <p>Provides the ability to dynamic exe args as set by the task's test script
  * <p><pre>
- *    R: QueuedTask
- *    R: int (num chunks)
- *    R: String (log data) x num chunks
- *    W: ACK
+ *    R: long (task id)
+ *    W: String[] (args, null if no override set)
  * </pre></p>
  * @author dbattams
  * @version $Id$
  */
-public final class Logexe extends Command {
+public final class Getargs extends Command {
 
 	/**
 	 * @param in
 	 * @param out
 	 */
-	public Logexe(ObjectInputStream in, ObjectOutputStream out) {
+	public Getargs(ObjectInputStream in, ObjectOutputStream out) {
 		super(in, out);
 		// TODO Auto-generated constructor stub
 	}
@@ -51,22 +48,9 @@ public final class Logexe extends Command {
 	 */
 	@Override
 	public void execute() throws IOException {
-		try {
-			QueuedTask qt = (QueuedTask)getIn().readObject();
-			int chunks = getIn().readInt();
-			StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < chunks; ++i)
-				sb.append(getIn().readUTF());
-			NetworkAck ack = null;
-			if(DataStore.get().logOutput(qt, QueuedTask.OutputType.TASK, sb.toString()))
-				ack = NetworkAck.get(NetworkAck.OK);
-			else
-				ack = NetworkAck.get(NetworkAck.ERR + "Failed to write log to data store!");
-			getOut().writeObject(ack);
-			getOut().flush();
-		} catch (ClassNotFoundException e) {
-			throw new IOException(e);
-		}
+		long taskId = getIn().readLong();
+		getOut().writeUTF(TaskQueue.get().getExeArgs(taskId));
+		getOut().writeObject(NetworkAck.get(NetworkAck.OK));
+		getOut().flush();
 	}
-
 }

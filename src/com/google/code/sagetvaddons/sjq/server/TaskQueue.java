@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010 Battams, Derek
+ *      Copyright 2010-2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ import gkusnick.sagetv.api.API;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -159,8 +161,47 @@ final public class TaskQueue {
 	 */
 	static final public TaskQueue get() { return INSTANCE; }
 
-	private TaskQueue() {
-		
+	private final Map<Long, String> ARGS = Collections.synchronizedMap(new HashMap<Long, String>());
+	
+	private TaskQueue() {}
+	
+	/**
+	 * Allow scripts to dynamically modify a task's exe args at runtime
+	 * @param taskId The task id whose args are to be modified
+	 * @param args The new args; if null, remove the mapping (i.e. just use the preconfigured exe args for the task)
+	 * @return True on success or false on failure
+	 */
+	public boolean setExeArgs(long taskId, String args) {
+		if(args == null) {
+			ARGS.remove(taskId);
+			return true;
+		} else {
+			boolean isValid = false;
+			for(QueuedTask qt : DataStore.get().getActiveQueue()) {
+				if(qt.getQueueId() == taskId) {
+					isValid = true;
+					break;
+				}
+			}
+			if(!isValid) {
+				LOG.error("Didn't find active task for " + taskId);
+				return false;
+			}
+			LOG.warn("Set args to '" + args + "' for " + taskId);
+			ARGS.put(taskId, args);
+			return true;
+		}
+	}
+	
+	/**
+	 * Get the dynamically set exe args for the given task id
+	 * @param taskId The task id to get dynamic args for
+	 * @return The dynamic args for the task or null if none were set
+	 */
+	public String getExeArgs(long taskId) {
+		String args = ARGS.get(taskId);
+		LOG.warn("Returning '" + args + "' for " + taskId);
+		return ARGS.get(taskId);
 	}
 	
 	/**
@@ -224,6 +265,7 @@ final public class TaskQueue {
 		case FAILED:
 		case SKIPPED:
 		case RETURNED:
+			ARGS.remove(qt.getQueueId());
 			startTasks(true);
 		}
 		return rc;

@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010 Battams, Derek
+ *      Copyright 2010-2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
  * <p>Provides the ability to log test output for an executed task</p>
  * <p><pre>
  *    R: QueuedTask
- *    R: String (log data)
+ *    R: int (num chunks)
+ *    R: String (log data) x num chunks
  *    W: ACK + qId
  * </pre></p>
  * @author dbattams
@@ -52,9 +53,12 @@ public final class Logtest extends Command {
 	public void execute() throws IOException {
 		try {
 			QueuedTask qt = (QueuedTask)getIn().readObject();
-			String log = getIn().readUTF();
+			int chunks = getIn().readInt();
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < chunks; ++i)
+				sb.append(getIn().readUTF());
 			NetworkAck ack = null;
-			if(DataStore.get().logOutput(qt, QueuedTask.OutputType.TEST, log))
+			if(DataStore.get().logOutput(qt, QueuedTask.OutputType.TEST, sb.toString()))
 				ack = NetworkAck.get(NetworkAck.OK);
 			else
 				ack = NetworkAck.get(NetworkAck.ERR + "Failed to write log to data store!");
