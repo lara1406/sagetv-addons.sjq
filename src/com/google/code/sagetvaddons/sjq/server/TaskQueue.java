@@ -266,6 +266,7 @@ final public class TaskQueue {
 		case SKIPPED:
 		case RETURNED:
 			ARGS.remove(qt.getQueueId());
+			clearTaskResourceAdjustments(qt);
 			startTasks(true);
 		}
 		return rc;
@@ -273,5 +274,13 @@ final public class TaskQueue {
 
 	synchronized public boolean deleteClient(Client c) {
 		return DataStore.get().deleteClient(c);
+	}
+
+	synchronized public boolean setTaskResources(QueuedTask qt, int usedRes) {
+		return DataStore.get().setTaskResources(qt, usedRes);
+	}
+	
+	synchronized public boolean clearTaskResourceAdjustments(QueuedTask qt) {
+		return DataStore.get().clearTaskResourceAdjustments(qt);
 	}
 }

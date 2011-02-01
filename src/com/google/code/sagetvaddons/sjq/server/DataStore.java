@@ -129,7 +129,9 @@ public final class DataStore {
 	static private final String SAVE_SETTING = "SaveSetting";
 	static private final String DELETE_TASK = "DelTask";
 	static private final String CLEAN_QUEUE = "CleanQueue";
-
+	static private final String ADD_RES_ADJ = "AddResAdj";
+	static private final String DEL_RES_ADJ = "RmResAdj";
+	
 	static private final int DB_SCHEMA = 3;
 	
 	static private boolean dbInitialized = false;
@@ -214,7 +216,12 @@ public final class DataStore {
 		"CONSTRAINT IF NOT EXISTS type_not_empty__task_log CHECK LENGTH(type) > 0)";
 		s.executeUpdate(qry);
 
-		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
+		qry = "CREATE TABLE IF NOT EXISTS res_adj (id BIGINT NOT NULL PRIMARY KEY, host VARCHAR(512) NOT NULL, port INT NOT NULL, adjustment INT NOT NULL, " +
+		"CONSTRAINT IF NOT EXISTS fk_queue__res_adj FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
+		"CONSTRAINT IF NOT EXISTS fk_client__res_adj FOREIGN KEY (host, port) REFERENCES client (host, port) ON DELETE CASCADE)";
+		s.executeUpdate(qry);
+		
+		qry = "	";
 		s.executeUpdate(qry);
 
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_for_clnt_by_task AS SELECT q.host, q.port, q.job_id, COUNT(q.job_id) AS active FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port, q.job_id)";
@@ -225,10 +232,16 @@ public final class DataStore {
 
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_by_clnt AS SELECT host, port, SUM(active) AS active FROM active_cnt_for_clnt_by_task GROUP BY (host, port)";
 		s.executeUpdate(qry);
+
+		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt_with_adj AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources, IFNULL(SUM(adjustment), 0) AS adjustments, (SUM(reqd_resources) + IFNULL(SUM(adjustment), 0)) AS total FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) LEFT OUTER JOIN res_adj AS a ON (q.host = a.host AND q.port = a.port) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
+		s.executeUpdate(qry);
 		
-		qry = "CREATE INDEX IF NOT EXISTS finished__queue ON queue(finished)";
+		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
 		s.executeUpdate(qry);
 
+		qry = "CREATE INDEX IF NOT EXISTS finished__queue ON queue(finished)";
+		s.executeUpdate(qry);
+		
 		qry = "INSERT INTO settings (var, val) VALUES ('schema', '1')";
 		try {
 			s.executeUpdate(qry);
@@ -311,7 +324,7 @@ public final class DataStore {
 		qry = "SELECT host, port FROM client_tasks WHERE id = ?";
 		stmts.put(CLIENT_FOR_TASK, conn.prepareStatement(qry));
 
-		qry = "SELECT used_resources FROM used_res_by_clnt WHERE host = ? AND port = ?";
+		qry = "SELECT total FROM used_res_by_clnt_with_adj WHERE host = ? AND port = ?";
 		stmts.put(GET_USED_RESOURCES, conn.prepareStatement(qry));
 
 		qry = "SELECT active FROM active_cnt_for_clnt_by_task WHERE host = ? AND port = ? AND job_id = ?";
@@ -349,6 +362,12 @@ public final class DataStore {
 		
 		qry = "DELETE FROM queue WHERE (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'COMPLETED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'FAILED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'SKIPPED')";
 		stmts.put(CLEAN_QUEUE, conn.prepareStatement(qry));
+		
+		qry = "INSERT INTO res_adj (id, host, port, adjustment) VALUES (?, ?, ?, ?)";
+		stmts.put(ADD_RES_ADJ, conn.prepareStatement(qry));
+		
+		qry = "DELETE FROM res_adj WHERE id = ?";
+		stmts.put(DEL_RES_ADJ, conn.prepareStatement(qry));
 	}
 
 	/**
@@ -1368,5 +1387,47 @@ public final class DataStore {
 	 */
 	public String[] getTasksForEvent(String eventId) {
 		return TaskList.getList(getSetting(eventId, ""));
+	}
+
+	/**
+	 * Set the dynamic resource usage of the given task
+	 * @param qt The task whose resource usage is being modified
+	 * @param usedRes The new, total resources being used by this task
+	 * @return True on success or false on any failure
+	 */
+	boolean setTaskResources(QueuedTask qt, int usedRes) {
+		PreparedStatement rmStmt = stmts.get(DEL_RES_ADJ);
+		PreparedStatement inStmt = stmts.get(ADD_RES_ADJ);
+		
+		try {
+			rmStmt.setLong(1, qt.getQueueId());
+			rmStmt.executeUpdate();
+			inStmt.setLong(1, qt.getQueueId());
+			inStmt.setString(2, qt.getAssignee().getHost());
+			inStmt.setInt(3, qt.getAssignee().getPort());
+			inStmt.setInt(4, usedRes - qt.getRequiredResources());
+			inStmt.executeUpdate();
+		} catch(SQLException e) {
+			LOG.error("SQLError", e);
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Clear any dynamic resource adjustments made for the given task
+	 * @param qt The task to be reset
+	 * @return True on success; false on failure
+	 */
+	boolean clearTaskResourceAdjustments(QueuedTask qt) {
+		PreparedStatement pStmt = stmts.get(DEL_RES_ADJ);
+		try {
+			pStmt.setLong(1, qt.getQueueId());
+			pStmt.executeUpdate();
+		} catch(SQLException e) {
+			LOG.error("SQLError", e);
+			return false;
+		}
+		return true;
 	}
 }
