@@ -233,7 +233,7 @@ public final class DataStore {
 		qry = "CREATE VIEW IF NOT EXISTS active_cnt_by_clnt AS SELECT host, port, SUM(active) AS active FROM active_cnt_for_clnt_by_task GROUP BY (host, port)";
 		s.executeUpdate(qry);
 
-		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt_with_adj AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources, IFNULL(SUM(adjustment), 0) AS adjustments, (SUM(reqd_resources) + IFNULL(SUM(adjustment), 0)) AS total FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) LEFT OUTER JOIN res_adj AS a ON (q.host = a.host AND q.port = a.port) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
+		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt_with_adj AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources, IFNULL(SUM(adjustment), 0) AS adjustments, (SUM(reqd_resources) + IFNULL(SUM(adjustment), 0)) AS total FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) LEFT OUTER JOIN res_adj AS a ON (q.host = a.host AND q.port = a.port AND q.id = a.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
 		s.executeUpdate(qry);
 		
 		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
