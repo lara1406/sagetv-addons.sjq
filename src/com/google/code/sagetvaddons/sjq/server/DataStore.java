@@ -132,7 +132,7 @@ public final class DataStore {
 	static private final String ADD_RES_ADJ = "AddResAdj";
 	static private final String DEL_RES_ADJ = "RmResAdj";
 	
-	static private final int DB_SCHEMA = 3;
+	static private final int DB_SCHEMA = 4;
 	
 	static private boolean dbInitialized = false;
 
@@ -278,6 +278,13 @@ public final class DataStore {
 				qry = "UPDATE settings SET val = '3' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
+			case 3:
+				qry = "ALTER TABLE client ADD COLUMN mapdir LONG VARCHAR NOT NULL DEFAULT ''";
+				stmt.executeUpdate(qry);
+				
+				qry = "UPDATE settings SET val = '4' WHERE var = 'schema'";
+				stmt.executeUpdate(qry);
+				break;
 			}
 			++schema;
 		}
@@ -291,16 +298,16 @@ public final class DataStore {
 		String qry = "SELECT val FROM settings WHERE var = ?";
 		stmts.put(READ_SETTING, conn.prepareStatement(qry));
 
-		qry = "SELECT state, schedule, last_update, total_resources, version FROM client WHERE host = ? AND port = ?";
+		qry = "SELECT state, schedule, last_update, total_resources, version, mapdir FROM client WHERE host = ? AND port = ?";
 		stmts.put(READ_CLIENT, conn.prepareStatement(qry));
 
 		qry = "SELECT host, port FROM client";
 		stmts.put(READ_ALL_CLIENTS, conn.prepareStatement(qry));
 
-		qry = "INSERT INTO client (host, port, state, schedule, last_update, total_resources, version) VALUES (?, ?, ?, ?, ?, ?, ?)";
+		qry = "INSERT INTO client (host, port, state, schedule, last_update, total_resources, version, mapdir) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 		stmts.put(ADD_CLIENT, conn.prepareStatement(qry));
 
-		qry = "UPDATE client SET state = ?, schedule = ?, last_update = ?, total_resources = ?, version = ? WHERE host = ? AND port = ?";
+		qry = "UPDATE client SET state = ?, schedule = ?, last_update = ?, total_resources = ?, version = ?, mapdir = ? WHERE host = ? AND port = ?";
 		stmts.put(UPDATE_CLIENT, conn.prepareStatement(qry));
 
 		qry = "DELETE FROM client WHERE host = ? AND port = ?";
@@ -822,6 +829,7 @@ public final class DataStore {
 				pStmt.setTimestamp(5, new java.sql.Timestamp(clnt.getLastUpdate().getTime()));
 				pStmt.setInt(6, clnt.getMaxResources());
 				pStmt.setInt(7, clnt.getVersion());
+				pStmt.setString(8, clnt.getMapDir());
 				pStmt.executeUpdate();
 				updateClientTasks(clnt);
 				if(localTransaction)
@@ -863,7 +871,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			if(rs.next()) {
-				Client c = new Client(host, port, getFreeResources(host, port, rs.getInt(4)), rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), rs.getInt(5));
+				Client c = new Client(host, port, getFreeResources(host, port, rs.getInt(4)), rs.getString(2), Client.State.valueOf(rs.getString(1)), rs.getTimestamp(3), rs.getInt(4), getTasksForClient(host, port), rs.getInt(5), rs.getString(6));
 				return c;
 			}
 			return null;
@@ -993,8 +1001,9 @@ public final class DataStore {
 			pStmt.setTimestamp(3, new java.sql.Timestamp(clnt.getLastUpdate().getTime()));
 			pStmt.setInt(4, clnt.getMaxResources());
 			pStmt.setInt(5, clnt.getVersion());
-			pStmt.setString(6, clnt.getHost());
-			pStmt.setInt(7, clnt.getPort());
+			pStmt.setString(6, clnt.getMapDir());
+			pStmt.setString(7, clnt.getHost());
+			pStmt.setInt(8, clnt.getPort());
 			pStmt.executeUpdate();
 			updateClientTasks(clnt);
 			if(localTransaction)

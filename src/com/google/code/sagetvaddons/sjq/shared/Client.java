@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010 Battams, Derek
+ *      Copyright 2010-2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ public final class Client implements Serializable {
 	private int port;
 	private Collection<Task> tasks;
 	private int version;
+	private String mapDir;
 	
 	/**
 	 * Default constructor
@@ -115,8 +116,9 @@ public final class Client implements Serializable {
 	 * @param maxResources The max number of resources for this client
 	 * @param tasks The array of tasks this client is capable of running
 	 * @param version The version number of this client
+	 * @param mapDir The mapdir setting for this client
 	 */
-	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks, int version) {
+	public Client(String host, int port, int freeResources, String schedule, State state, Date lastUpdate, int maxResources, Task[] tasks, int version, String mapDir) {
 		this.host = host;
 		this.freeResources = freeResources;
 		this.schedule = schedule;
@@ -131,6 +133,7 @@ public final class Client implements Serializable {
 			for(Task t : tasks)
 				this.tasks.add(t);
 		this.version = version;
+		this.mapDir = mapDir;
 	}
 
 	/**
@@ -371,5 +374,19 @@ public final class Client implements Serializable {
 	 */
 	public boolean removeTask(Task t) {
 		return tasks.remove(t);
+	}
+
+	/**
+	 * @return the mapDir
+	 */
+	public String getMapDir() {
+		return mapDir;
+	}
+
+	/**
+	 * @param mapDir the mapDir to set
+	 */
+	public void setMapDir(String mapDir) {
+		this.mapDir = mapDir;
 	}
 }
