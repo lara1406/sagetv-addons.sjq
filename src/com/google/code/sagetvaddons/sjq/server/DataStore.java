@@ -279,7 +279,7 @@ public final class DataStore {
 				stmt.executeUpdate(qry);
 				break;
 			case 3:
-				qry = "ALTER TABLE client ADD COLUMN mapdir LONG VARCHAR NOT NULL DEFAULT ''";
+				qry = "ALTER TABLE client ADD COLUMN mapdir LONGVARCHAR NOT NULL DEFAULT ''";
 				stmt.executeUpdate(qry);
 				
 				qry = "UPDATE settings SET val = '4' WHERE var = 'schema'";
