@@ -94,15 +94,7 @@ public final class Client implements Serializable {
 	 * @param port The port number the task client is listening on
 	 */
 	public Client(String host, int port) {
-		this.host = host;
-		state = Client.State.OFFLINE;
-		freeResources = 0;
-		schedule = DEFAULT_SCHED;
-		lastUpdate = new Date();
-		maxResources = DEFAULT_RESOURCES;
-		this.port = port;
-		tasks = new ArrayList<Task>();
-		version = 0;
+		this(host, port, 0, DEFAULT_SCHED, Client.State.OFFLINE, new Date(), DEFAULT_RESOURCES, new Task[0], 0, "");
 	}
 	
 	/**
