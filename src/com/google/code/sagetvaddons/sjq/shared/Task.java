@@ -87,6 +87,7 @@ public class Task implements Serializable {
 	private String test;
 	private String testArgs;
 	private boolean showIcon;
+	private boolean genSysMsgOnFailure;
 	
 	/**
 	 * Default constructor; set state to default values
@@ -104,6 +105,7 @@ public class Task implements Serializable {
 		maxReturnCode = DEFAULT_MAX_RC;
 		test = DEFAULT_TEST;
 		testArgs = "";
+		genSysMsgOnFailure = false;
 	}
 	
 	/**
@@ -121,11 +123,12 @@ public class Task implements Serializable {
 	 * @param testExe The path of the pretest script to execute or null if one shouldn't be run
 	 * @param testArgs Test args to pass to the pretest script
 	 * @param showIcon Boolean flag for STVi to determine if this task should be displayed in STV header
+	 * @param genSysMsgOnFailure If true, generate a system message if this task fails
 	 */
 	public Task(String id, int requiredResources, int maxInstances,
 			String schedule, String executable, String exeArguments,
 			long maxTime, float maxTimeRatio, int minReturnCode,
-			int maxReturnCode, String testExe, String testArgs, boolean showIcon) {
+			int maxReturnCode, String testExe, String testArgs, boolean showIcon, boolean genSysMsg) {
 		this.id = id;
 		this.requiredResources = requiredResources;
 		this.maxInstances = maxInstances;
@@ -139,8 +142,25 @@ public class Task implements Serializable {
 		this.test = testExe;
 		this.testArgs = testArgs;
 		this.showIcon = showIcon;
+		this.genSysMsgOnFailure = genSysMsg;
 	}
 
+	/**
+	 * Set the sys msg on failure flag
+	 * @param b The value of the flag
+	 */
+	public void setGenSysMsgOnFailure(boolean b) {
+		genSysMsgOnFailure = b;
+	}
+	
+	/**
+	 * Get the sys msg on failure flag
+	 * @return The value of the flag
+	 */
+	public boolean getGenSysMsgOnFailure() {
+		return genSysMsgOnFailure;
+	}
+	
 	/**
 	 * Set the show icon status for this task
 	 * @param b The value of the status flag

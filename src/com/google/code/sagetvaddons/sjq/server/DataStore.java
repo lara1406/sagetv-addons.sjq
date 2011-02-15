@@ -132,7 +132,7 @@ public final class DataStore {
 	static private final String ADD_RES_ADJ = "AddResAdj";
 	static private final String DEL_RES_ADJ = "RmResAdj";
 	
-	static private final int DB_SCHEMA = 4;
+	static private final int DB_SCHEMA = 5;
 	
 	static private boolean dbInitialized = false;
 
@@ -285,6 +285,13 @@ public final class DataStore {
 				qry = "UPDATE settings SET val = '4' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
+			case 4:
+				qry = "ALTER TABLE client_tasks ADD COLUMN gen_sysmsg BOOLEAN NOT NULL DEFAULT false";
+				stmt.executeUpdate(qry);
+				
+				qry = "UPDATE settings SET val = '5' WHERE var = 'schema'";
+				stmt.executeUpdate(qry);
+				break;
 			}
 			++schema;
 		}
@@ -316,7 +323,7 @@ public final class DataStore {
 		qry = "DELETE FROM client_tasks WHERE host = ? AND port = ?";
 		stmts.put(WIPE_CLNT_TASKS, conn.prepareStatement(qry));
 
-		qry = "INSERT INTO client_tasks (host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, id, test, test_args) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		qry = "INSERT INTO client_tasks (host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, id, test, test_args, gen_sysmsg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		stmts.put(ADD_CLNT_TASK, conn.prepareStatement(qry));
 
 		qry = "INSERT INTO queue (job_id) VALUES (?)";
@@ -355,7 +362,7 @@ public final class DataStore {
 		qry = "SELECT log FROM task_log WHERE id = ? AND type = ?";
 		stmts.put(READ_LOG, conn.prepareStatement(qry));
 
-		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ? AND t.host IS NOT NULL";
+		qry = "SELECT t.id, t.reqd_resources, t.max_instances, t.schedule, t.exe, t.args, t.max_time, t.max_time_ratio, t.min_rc, t.max_rc, t.test, t.test_args, t.gen_sysmsg FROM client AS c LEFT OUTER JOIN client_tasks AS t ON (c.host = t.host AND c.port = t.port) WHERE c.host = ? AND c.port = ? AND t.host IS NOT NULL";
 		stmts.put(READ_CLNT_TASKS, conn.prepareStatement(qry));
 
 		qry = "DELETE FROM settings WHERE var = ?";
@@ -449,7 +456,7 @@ public final class DataStore {
 			pStmt.setInt(2, port);
 			rs = pStmt.executeQuery();
 			while(rs.next())
-				tasks.add(new Task(rs.getString(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getLong(7), rs.getFloat(8), rs.getInt(9), rs.getInt(10), rs.getString(11), rs.getString(12), false));
+				tasks.add(new Task(rs.getString(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getLong(7), rs.getFloat(8), rs.getInt(9), rs.getInt(10), rs.getString(11), rs.getString(12), false, rs.getBoolean(13)));
 			return tasks.toArray(new Task[tasks.size()]);
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
@@ -504,7 +511,7 @@ public final class DataStore {
 	
 	QueuedTask[] getQueue(boolean activeOnly) {
 		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
-		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port, q.show_icon FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port)";
+		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port, q.show_icon, gen_sysmsg FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port)";
 		if(activeOnly)
 			qry = qry.concat(" WHERE state NOT IN ('COMPLETED', 'FAILED', 'SKIPPED')");
 		Statement stmt = null;
@@ -513,7 +520,7 @@ public final class DataStore {
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(qry);
 			while(rs.next())
-				tasks.add(new QueuedTask(rs.getLong(1), rs.getString(2), rs.getInt(7), rs.getInt(8), rs.getString(9), rs.getString(10), rs.getString(11), rs.getLong(12), rs.getFloat(13), rs.getInt(14), rs.getInt(15), getMetadata(rs.getLong(1)), rs.getTimestamp(3), rs.getTimestamp(4), rs.getTimestamp(5), QueuedTask.State.valueOf(rs.getString(6)), getClient(rs.getString(18), rs.getInt(19)), Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/enginePort", "23347")), rs.getString(16), rs.getString(17), Integer.parseInt(Configuration.GetServerProperty("sagex/api/RMIPort", "1098")), rs.getBoolean(20)));
+				tasks.add(new QueuedTask(rs.getLong(1), rs.getString(2), rs.getInt(7), rs.getInt(8), rs.getString(9), rs.getString(10), rs.getString(11), rs.getLong(12), rs.getFloat(13), rs.getInt(14), rs.getInt(15), getMetadata(rs.getLong(1)), rs.getTimestamp(3), rs.getTimestamp(4), rs.getTimestamp(5), QueuedTask.State.valueOf(rs.getString(6)), getClient(rs.getString(18), rs.getInt(19)), Global.GetServerAddress(), Integer.parseInt(Configuration.GetServerProperty("sjq4/enginePort", "23347")), rs.getString(16), rs.getString(17), Integer.parseInt(Configuration.GetServerProperty("sagex/api/RMIPort", "1098")), rs.getBoolean(20), rs.getBoolean(21)));
 			return tasks.toArray(new QueuedTask[tasks.size()]);
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);
@@ -682,6 +689,7 @@ public final class DataStore {
 				pStmt.setString(12, t.getId());
 				pStmt.setString(13, t.getTest());
 				pStmt.setString(14, t.getTestArgs());
+				pStmt.setBoolean(15, t.getGenSysMsgOnFailure());
 				pStmt.addBatch();
 				maxTasks = true;
 			}
@@ -1181,7 +1189,7 @@ public final class DataStore {
 	 * @return The map of registered tasks; may be empty in case of error, but never null
 	 */
 	public Map<String, Collection<Task>> getAllRegisteredTasks() {
-		String qry = "SELECT id, host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args FROM client_tasks";
+		String qry = "SELECT id, host, port, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, gen_sysmsg FROM client_tasks";
 		Map<String, Collection<Task>> map = new HashMap<String, Collection<Task>>();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -1197,7 +1205,7 @@ public final class DataStore {
 					tasks = new ArrayList<Task>();
 					map.put(c.getDescription(), tasks);
 				}
-				tasks.add(new Task(rs.getString(1), rs.getInt(4), rs.getInt(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getLong(9), rs.getFloat(10), rs.getInt(11), rs.getInt(12), rs.getString(13), rs.getString(14), false));
+				tasks.add(new Task(rs.getString(1), rs.getInt(4), rs.getInt(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getLong(9), rs.getFloat(10), rs.getInt(11), rs.getInt(12), rs.getString(13), rs.getString(14), false, rs.getBoolean(15)));
 			}
 		} catch(SQLException e) {
 			LOG.error(SQL_ERROR, e);

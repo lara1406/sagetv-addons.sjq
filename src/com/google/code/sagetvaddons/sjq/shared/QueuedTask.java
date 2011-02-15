@@ -123,15 +123,16 @@ public class QueuedTask extends Task {
 	 * @param testArgs Optional args to be provided to the test script; currently not implemented
 	 * @param rmiPort The sagex-api RMI port for the Sage server hosting the SJQ server that assigned this task
 	 * @param showIcon Should this task be shown in the STV header
+	 * @param genSysMsgOnFailure Show this task generate a system message if it fails?
 	 */
 	public QueuedTask(long qId, String id, int requiredResources, int maxInstances,
 			String schedule, String executable, String exeArguments,
 			long maxTime, float maxTimeRatio, int minReturnCode,
 			int maxReturnCode, Map<String, String> metadata, Date created, Date assigned,
-			Date completed, State state, Client assignee, String serverHost, int serverPort, String test, String testArgs, int rmiPort, boolean showIcon) {
+			Date completed, State state, Client assignee, String serverHost, int serverPort, String test, String testArgs, int rmiPort, boolean showIcon, boolean genSysMsgOnFailure) {
 		super(id, requiredResources, maxInstances, schedule, executable,
 				exeArguments, maxTime, maxTimeRatio, minReturnCode,
-				maxReturnCode, test, testArgs, showIcon);
+				maxReturnCode, test, testArgs, showIcon, genSysMsgOnFailure);
 		this.qId = qId;
 		this.metadata = metadata;
 		this.created = created;
@@ -161,7 +162,7 @@ public class QueuedTask extends Task {
 	public QueuedTask(Task t, long qId, Map<String, String> metadata, Date created, Date assigned, Date completed, State state, Client assignee, String serverHost, int serverPort, int rmiPort) {
 		this(qId, t.getId(), t.getRequiredResources(), t.getMaxInstances(), t.getSchedule(), t.getExecutable(), t.getExeArguments(),
 				t.getMaxTime(), t.getMaxTimeRatio(), t.getMinReturnCode(), t.getMaxReturnCode(), metadata, created,
-				assigned, completed, state, assignee, serverHost, serverPort, t.getTest(), t.getTestArgs(), rmiPort, t.isShowIcon());
+				assigned, completed, state, assignee, serverHost, serverPort, t.getTest(), t.getTestArgs(), rmiPort, t.isShowIcon(), t.getGenSysMsgOnFailure());
 	}
 	
 	/**

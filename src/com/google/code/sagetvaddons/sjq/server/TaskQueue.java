@@ -267,11 +267,20 @@ final public class TaskQueue {
 		case RETURNED:
 			ARGS.remove(qt.getQueueId());
 			clearTaskResourceAdjustments(qt);
+			if(qt.getState() == State.FAILED && qt.getGenSysMsgOnFailure())
+				genSysMsg(qt);
 			startTasks(true);
 		}
 		return rc;
 	}
 
+	private void genSysMsg(QueuedTask qt) {
+		StringBuilder msg = new StringBuilder();
+		msg.append("Task " + qt.getQueueId() + " of type '" + qt.getId() + "' failed on client '" + qt.getAssignee().getHost() + ":" + qt.getAssignee().getPort() + "'; check the task logs for further details!");
+		
+		API.apiNullUI.systemMessageAPI.PostSystemMessage(23000, 2, msg.toString(), Config.get().getSysMsgProps());
+	}
+	
 	synchronized public boolean deleteClient(Client c) {
 		return DataStore.get().deleteClient(c);
 	}
