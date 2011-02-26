@@ -27,7 +27,8 @@ import com.google.code.sagetvaddons.sjq.server.TaskQueue;
  * <p>Provides the ability to dynamic exe args as set by the task's test script
  * <p><pre>
  *    R: long (task id)
- *    W: String[] (args, null if no override set)
+ *    W: boolean (true if override exists or false if none is defined)
+ *    W: String (args, read but ignored if boolean above = false)
  * </pre></p>
  * @author dbattams
  * @version $Id$
@@ -49,7 +50,14 @@ public final class Getargs extends Command {
 	@Override
 	public void execute() throws IOException {
 		long taskId = getIn().readLong();
-		getOut().writeUTF(TaskQueue.get().getExeArgs(taskId));
+		String args = TaskQueue.get().getExeArgs(taskId);
+		boolean hasArgs = true;
+		if(args == null) {
+			args = "";
+			hasArgs = false;
+		}
+		getOut().writeBoolean(hasArgs);
+		getOut().writeUTF(args);
 		getOut().writeObject(NetworkAck.get(NetworkAck.OK));
 		getOut().flush();
 	}

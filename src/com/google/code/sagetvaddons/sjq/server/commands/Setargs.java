@@ -27,7 +27,8 @@ import com.google.code.sagetvaddons.sjq.server.TaskQueue;
  * <p>Provides the ability to dynamically set the args for an exe from its test script
  * <p><pre>
  *    R: long (task id)
- *    R: String[] (args)
+ *    R: bool (isNotNull)
+ *    R: String (args)
  *    W: ACK
  * </pre></p>
  * @author dbattams
@@ -50,8 +51,9 @@ public final class Setargs extends Command {
 	@Override
 	public void execute() throws IOException {
 		long taskId = getIn().readLong();
+		boolean isOverride = getIn().readBoolean();
 		String args = (String)getIn().readUTF();
-		boolean result = TaskQueue.get().setExeArgs(taskId, args);
+		boolean result = TaskQueue.get().setExeArgs(taskId, isOverride ? args : null);
 		getOut().writeObject(NetworkAck.get(result ? NetworkAck.OK : NetworkAck.ERR));
 		getOut().flush();
 	}
