@@ -32,6 +32,8 @@ import org.apache.log4j.PropertyConfigurator;
 import sage.SageTVPlugin;
 import sage.SageTVPluginRegistry;
 
+import com.google.code.sagetvaddons.license.License;
+import com.google.code.sagetvaddons.license.LicenseResponse;
 import com.google.code.sagetvaddons.sjq.listener.Listener;
 
 /**
@@ -62,12 +64,14 @@ public final class Plugin implements SageTVPlugin {
 	static public final String OPT_KEEP_COMPLETED_DAYS = "KeepCompletedDays";
 	static public final String OPT_KEEP_FAILED_DAYS = "KeepFailedDays";
 	static public final String OPT_KEEP_SKIPPED_DAYS = "KeepSkippedDays";
-	static private final String[] ALL_OPTS = new String[] {OPT_EMAIL, OPT_STATE, OPT_KEEP_COMPLETED_DAYS, OPT_KEEP_FAILED_DAYS, OPT_KEEP_SKIPPED_DAYS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
+	static private final String[] ALL_OPTS = new String[] {OPT_STATE, OPT_KEEP_COMPLETED_DAYS, OPT_KEEP_FAILED_DAYS, OPT_KEEP_SKIPPED_DAYS, OPT_QUEUE_FREQ, OPT_PING_FREQ, OPT_ACTIVE_TASK_MGR_FREQ, OPT_QUEUE_CLEANER_FREQ};
 	
 	/**
 	 * The location of the SJQv4 crontab file to be used; relative to the base install dir of SageTV
 	 */
 	static public final File CRONTAB = new File("plugins/sjq/crontab");
+
+	public static final String PLUGIN_ID = "sjq";
 	
 	private Timer timer;
 	private Thread agent;
@@ -109,10 +113,8 @@ public final class Plugin implements SageTVPlugin {
 			return "Determines how often, in seconds, the engine validates all active tasks with their assigned task client.  Changes to this value require a restart of the plugin.";
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			return "Determines how often, in seconds, the engine cleans up old, completed entries from the task queue.  Changes to this value require a restart of the plugin.";
-		else if(OPT_EMAIL.equals(arg0))
-			return "The registered email address associated with your sagetv-addons license file.  Changes to this value require a restart of SageTV to take effect.";
 		else if(OPT_STATE.equals(arg0))
-			return "This button shows the current licensing state of your SJQv4 engine plugin.  Clicking the button does nothing.";
+			return "This button shows the current licensing state of your SJQv4 engine plugin.  Configure your license details in the sagetv-addons license server plugin.  Clicking the button does nothing.";
 		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
 			return "Number of days to keep output from tasks that completed successfully.  This only deletes output stored in the SJQ database.";
 		else if(OPT_KEEP_FAILED_DAYS.equals(arg0))
@@ -133,8 +135,6 @@ public final class Plugin implements SageTVPlugin {
 			return "Active Task Verification Frequency (seconds)";
 		else if(OPT_QUEUE_CLEANER_FREQ.equals(arg0))
 			return "Queue Cleaner Frequency (seconds)";
-		else if(OPT_EMAIL.equals(arg0))
-			return "Licensed Email Address";
 		else if(OPT_STATE.equals(arg0))
 			return "Licensing State of SJQv4 Engine";
 		else if(OPT_KEEP_COMPLETED_DAYS.equals(arg0))
@@ -270,7 +270,14 @@ public final class Plugin implements SageTVPlugin {
 		ds.setSetting("SupportedTvEvents", StringUtils.join(TV_EVENTS, ','));
 
 		// Validate the license file
-		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(License.get().isLicensed()));
+		License.autoConfig(DataStore.get().getSetting(OPT_EMAIL), new File("plugins/sagetv-addons.lic").getAbsolutePath());
+		LicenseResponse resp = License.isLicensed(PLUGIN_ID);
+		if(!resp.isLicensed()) {
+			LOG.warn("Unable to validate sagetv-addons license file!  Some features of this software have been disabled!");
+			LOG.warn("License server response: " + resp.getMessage());
+		} else
+			LOG.info("sagetv-addons license successfully validated!");
+		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(resp.isLicensed()));
 		
 		// Create the timer thread, which will run the agent pinger and the task queue threads periodically
 		if(timer != null)

@@ -25,6 +25,8 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
+import com.google.code.sagetvaddons.license.License;
+import com.google.code.sagetvaddons.license.LicenseResponse;
 import com.google.code.sagetvaddons.sjq.network.AgentClient;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 
@@ -86,8 +88,11 @@ final public class AgentManager extends TimerTask {
 	public void run() {
 		DataStore ds = DataStore.get();
 		boolean maxClients = false;
+		LicenseResponse resp = License.isLicensed(Plugin.PLUGIN_ID);
+		if(!resp.isLicensed())
+			LOG.warn("License server response: " + resp.getMessage());
 		for(Client c : ds.getAllClients()) {
-			if(maxClients && !License.get().isLicensed()) {
+			if(maxClients && !resp.isLicensed()) {
 				LOG.error("Too many registered clients for unlicensed version!  Unregistering the following task client: " + c);
 				ds.deleteClient(c);
 			} else {

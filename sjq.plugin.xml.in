@@ -63,6 +63,10 @@ Please see the user's guide for all the details, including common usage setup an
 		<Plugin>sagex-api-services</Plugin>
 		<MinVersion>7.0.23.2</MinVersion>
 	</Dependency>
+	<Dependency>
+		<Plugin>salicense</Plugin>
+		<MinVersion>1.0.0</MinVersion>
+	</Dependency>
 	<PluginType>Standard</PluginType>
 	<Package>
 		<PackageType>JAR</PackageType>
