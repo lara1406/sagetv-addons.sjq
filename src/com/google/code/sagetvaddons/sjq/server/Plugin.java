@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010 Battams, Derek
+ *      Copyright 2010-2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ public final class Plugin implements SageTVPlugin {
 	 */
 	static public final File CRONTAB = new File("plugins/sjq/crontab");
 
-	public static final String PLUGIN_ID = "sjq";
+	public static final String PLUGIN_ID = "sjq4";
 	
 	private Timer timer;
 	private Thread agent;

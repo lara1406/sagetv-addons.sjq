@@ -17,7 +17,7 @@ Please see the user's guide for all the details, including common usage setup an
 	<ResourcePath>plugins/sjq</ResourcePath>
 	<Webpage>http://sagetv-addons.googlecode.com</Webpage>
 	<Webpage>http://code.google.com/p/sagetv-addons/wiki/Sjq4UserGuide</Webpage>
-	<Webpage>http://code.google.com/p/sagetv-addons/wiki/DonationsFaq</Webpage>
+	<Webpage>http://code.google.com/p/sagetv-addons/wiki/PluginPricing</Webpage>
 	<ServerOnly>true</ServerOnly>
 	<Dependency>
 		<JVM/>
@@ -65,7 +65,7 @@ Please see the user's guide for all the details, including common usage setup an
 	</Dependency>
 	<Dependency>
 		<Plugin>salicense</Plugin>
-		<MinVersion>1.0.0</MinVersion>
+		<MinVersion>1.1.0</MinVersion>
 	</Dependency>
 	<PluginType>Standard</PluginType>
 	<Package>
