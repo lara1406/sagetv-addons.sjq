@@ -277,7 +277,6 @@ public final class Plugin implements SageTVPlugin {
 			LOG.warn("License server response: " + resp.getMessage());
 		} else
 			LOG.info("sagetv-addons license successfully validated!");
-		API.apiNullUI.configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(resp.isLicensed()));
 		
 		// Create the timer thread, which will run the agent pinger and the task queue threads periodically
 		if(timer != null)
@@ -348,7 +347,7 @@ public final class Plugin implements SageTVPlugin {
 			reg.eventUnsubscribe(this, event);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void sageEvent(String arg0, Map arg1) {
 		LOG.info("Event received: " + arg0);

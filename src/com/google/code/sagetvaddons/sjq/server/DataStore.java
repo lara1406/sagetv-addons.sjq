@@ -45,6 +45,7 @@ import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
 
+import com.google.code.sagetvaddons.license.License;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
@@ -58,7 +59,6 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
  */
 public final class DataStore {
 	static private final Logger LOG = Logger.getLogger("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".DataStore");
-	static final String LIC_PROP = "sjq4/isLicensed";
 	static private final ThreadLocal<DataStore> POOL = new ThreadLocal<DataStore>() {
 		@Override
 		public DataStore initialValue() {
@@ -668,12 +668,13 @@ public final class DataStore {
 		pStmt.executeUpdate();
 
 		if(clnt.getTasks().length > 0) {
+			boolean isLicensed = isLicensed();
 			pStmt = stmts.get(ADD_CLNT_TASK);
 			pStmt.setString(1, clnt.getHost());
 			pStmt.setInt(2, clnt.getPort());
 			boolean maxTasks = false;
 			for(Task t : clnt.getTasks()) {
-				if(maxTasks && !isLicensed()) {
+				if(maxTasks && !isLicensed) {
 					LOG.error("Task clients for unlicensed versions of SJQv4 can only have a single task defined.  Additional task definitions ignored!");
 					break;
 				}
@@ -1257,7 +1258,7 @@ public final class DataStore {
 	 * @return True if the SJQv4 engine is licensed or false otherwise
 	 */
 	public boolean isLicensed() {
-		return Boolean.parseBoolean(Configuration.GetServerProperty(LIC_PROP, "false"));
+		return License.isLicensed(Plugin.PLUGIN_ID).isLicensed();
 	}
 	
 	/**
