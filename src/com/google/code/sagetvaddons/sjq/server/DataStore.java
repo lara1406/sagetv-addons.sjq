@@ -1,5 +1,5 @@
 /*
- *      Copyright 2010 Battams, Derek
+ *      Copyright 2010-2011 Battams, Derek
  *       
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ import org.apache.log4j.Logger;
 import sagex.SageAPI;
 import sagex.api.Configuration;
 import sagex.api.Global;
+import sagex.api.PluginAPI;
 
-import com.google.code.sagetvaddons.license.License;
 import com.google.code.sagetvaddons.sjq.shared.Client;
 import com.google.code.sagetvaddons.sjq.shared.QueuedTask;
 import com.google.code.sagetvaddons.sjq.shared.Task;
@@ -59,6 +59,8 @@ import com.google.code.sagetvaddons.sjq.utils.TaskList;
  */
 public final class DataStore {
 	static private final Logger LOG = Logger.getLogger("com.google.code.sagetvaddons.sjq." + (Global.IsClient() || SageAPI.isRemote() ? "agent" : "server") + ".DataStore");
+	static public final String LIC_PROP = "sjq4/isLicensed";
+
 	static private final ThreadLocal<DataStore> POOL = new ThreadLocal<DataStore>() {
 		@Override
 		public DataStore initialValue() {
@@ -131,10 +133,11 @@ public final class DataStore {
 	static private final String CLEAN_QUEUE = "CleanQueue";
 	static private final String ADD_RES_ADJ = "AddResAdj";
 	static private final String DEL_RES_ADJ = "RmResAdj";
-	
+
 	static private final int DB_SCHEMA = 5;
-	
+
 	static private boolean dbInitialized = false;
+	static private Object self = null; // Plugin instance
 
 	private Connection conn;
 	private Map<String, PreparedStatement> stmts;
@@ -220,7 +223,7 @@ public final class DataStore {
 		"CONSTRAINT IF NOT EXISTS fk_queue__res_adj FOREIGN KEY (id) REFERENCES queue (id) ON DELETE CASCADE, " +
 		"CONSTRAINT IF NOT EXISTS fk_client__res_adj FOREIGN KEY (host, port) REFERENCES client (host, port) ON DELETE CASCADE)";
 		s.executeUpdate(qry);
-		
+
 		qry = "	";
 		s.executeUpdate(qry);
 
@@ -235,13 +238,13 @@ public final class DataStore {
 
 		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt_with_adj AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources, IFNULL(SUM(adjustment), 0) AS adjustments, (SUM(reqd_resources) + IFNULL(SUM(adjustment), 0)) AS total FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) LEFT OUTER JOIN res_adj AS a ON (q.host = a.host AND q.port = a.port AND q.id = a.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
 		s.executeUpdate(qry);
-		
+
 		qry = "CREATE VIEW IF NOT EXISTS used_res_by_clnt AS SELECT q.host, q.port, SUM(reqd_resources) AS used_resources FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.host = t.host AND q.port = t.port AND q.job_id = t.id) WHERE q.host IS NOT NULL AND q.state = 'RUNNING' GROUP BY (q.host, q.port)";
 		s.executeUpdate(qry);
 
 		qry = "CREATE INDEX IF NOT EXISTS finished__queue ON queue(finished)";
 		s.executeUpdate(qry);
-		
+
 		qry = "INSERT INTO settings (var, val) VALUES ('schema', '1')";
 		try {
 			s.executeUpdate(qry);
@@ -267,28 +270,28 @@ public final class DataStore {
 			case 1:
 				qry = "ALTER TABLE client ADD COLUMN version INT NOT NULL DEFAULT 0";
 				stmt.executeUpdate(qry);
-				
+
 				qry = "UPDATE settings SET val = '2' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
 			case 2:
 				qry = "ALTER TABLE queue ADD COLUMN show_icon BOOLEAN NOT NULL DEFAULT false";
 				stmt.executeUpdate(qry);
-				
+
 				qry = "UPDATE settings SET val = '3' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
 			case 3:
 				qry = "ALTER TABLE client ADD COLUMN mapdir LONGVARCHAR NOT NULL DEFAULT ''";
 				stmt.executeUpdate(qry);
-				
+
 				qry = "UPDATE settings SET val = '4' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
 			case 4:
 				qry = "ALTER TABLE client_tasks ADD COLUMN gen_sysmsg BOOLEAN NOT NULL DEFAULT false";
 				stmt.executeUpdate(qry);
-				
+
 				qry = "UPDATE settings SET val = '5' WHERE var = 'schema'";
 				stmt.executeUpdate(qry);
 				break;
@@ -373,13 +376,13 @@ public final class DataStore {
 
 		qry = "DELETE FROM queue WHERE id = ? AND state NOT IN ('STARTED', 'RUNNING')";
 		stmts.put(DELETE_TASK, conn.prepareStatement(qry));
-		
+
 		qry = "DELETE FROM queue WHERE (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'COMPLETED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'FAILED') OR (DATEDIFF('HOUR', finished, CURRENT_TIMESTAMP) >= ? AND state = 'SKIPPED')";
 		stmts.put(CLEAN_QUEUE, conn.prepareStatement(qry));
-		
+
 		qry = "INSERT INTO res_adj (id, host, port, adjustment) VALUES (?, ?, ?, ?)";
 		stmts.put(ADD_RES_ADJ, conn.prepareStatement(qry));
-		
+
 		qry = "DELETE FROM res_adj WHERE id = ?";
 		stmts.put(DEL_RES_ADJ, conn.prepareStatement(qry));
 	}
@@ -499,7 +502,7 @@ public final class DataStore {
 	public QueuedTask[] getActiveQueue() {
 		return getQueue(true);
 	}
-	
+
 	/**
 	 * <p>Return an array of every task in the queue.</p>
 	 * <p>This method returns every task in the queue at the time of the call; this includes active tasks, completed tasks, and failed tasks. <b>This list can get rather large, rather quickly!</b></p>
@@ -508,7 +511,7 @@ public final class DataStore {
 	public QueuedTask[] getQueue() {
 		return getQueue(false);
 	}
-	
+
 	QueuedTask[] getQueue(boolean activeOnly) {
 		Collection<QueuedTask> tasks = new ArrayList<QueuedTask>();
 		String qry = "SELECT q.id, q.job_id, created, assigned, finished, state, reqd_resources, max_instances, schedule, exe, args, max_time, max_time_ratio, min_rc, max_rc, test, test_args, q.host, q.port, q.show_icon, gen_sysmsg FROM queue AS q LEFT OUTER JOIN client_tasks AS t ON (q.job_id = t.id AND q.host = t.host AND q.port = t.port)";
@@ -668,16 +671,10 @@ public final class DataStore {
 		pStmt.executeUpdate();
 
 		if(clnt.getTasks().length > 0) {
-			boolean isLicensed = isLicensed();
 			pStmt = stmts.get(ADD_CLNT_TASK);
 			pStmt.setString(1, clnt.getHost());
 			pStmt.setInt(2, clnt.getPort());
-			boolean maxTasks = false;
 			for(Task t : clnt.getTasks()) {
-				if(maxTasks && !isLicensed) {
-					LOG.error("Task clients for unlicensed versions of SJQv4 can only have a single task defined.  Additional task definitions ignored!");
-					break;
-				}
 				pStmt.setInt(3, t.getRequiredResources());
 				pStmt.setInt(4, t.getMaxInstances());
 				pStmt.setString(5, t.getSchedule());
@@ -692,7 +689,6 @@ public final class DataStore {
 				pStmt.setString(14, t.getTestArgs());
 				pStmt.setBoolean(15, t.getGenSysMsgOnFailure());
 				pStmt.addBatch();
-				maxTasks = true;
 			}
 			pStmt.executeBatch();
 		}
@@ -788,10 +784,6 @@ public final class DataStore {
 		if(getClient(clnt.getHost(), clnt.getPort()) != null)
 			return updateClient(clnt);
 		else {
-			if(getAllClients().length > 0 && !isLicensed()) {
-				LOG.error("Unlicensed versions of SJQv4 can only have one registered task client!  You cannot register more task clients!");
-				return false;
-			}
 			try {
 				if(clnt.getHost().equals("127.0.0.1") || clnt.getHost().toLowerCase().contains("localhost") || InetAddress.getByName(clnt.getHost()).getHostAddress().equals("127.0.0.1")) {
 					LOG.error("Specified host appears to be the loopback interface and cannot be registered as a task client in SJQv4!  Please try another hostname.");
@@ -969,7 +961,7 @@ public final class DataStore {
 	int getFreeResources(Client c) {
 		return getFreeResources(c.getHost(), c.getPort(), c.getMaxResources());
 	}
-	
+
 	/**
 	 * Calculate the free resources for the given client at the time of this call
 	 * @param host The hostname
@@ -1183,7 +1175,7 @@ public final class DataStore {
 		}
 		return tasks.toArray(new String[tasks.size()]);
 	}
-	
+
 	/**
 	 * <p>Get a map of all registered tasks</p>
 	 * <p>Each key of the map is a Client.getDescription() value for the client the task belongs to</p>
@@ -1240,7 +1232,7 @@ public final class DataStore {
 		}
 		return tasks.toArray(new QueuedTask[tasks.size()]);
 	}
-	
+
 	void cleanCompletedTasks(int completedDays, int failedDays, int skippedDays) {
 		PreparedStatement pStmt = stmts.get(CLEAN_QUEUE);
 		try {
@@ -1252,15 +1244,27 @@ public final class DataStore {
 			LOG.error(SQL_ERROR, e);
 		}
 	}
-	
+
 	/**
 	 * Determine if the user's SJQv4 engine is licensed or not
 	 * @return True if the SJQv4 engine is licensed or false otherwise
 	 */
 	public boolean isLicensed() {
-		return License.isLicensed(Plugin.PLUGIN_ID).isLicensed();
+		return Boolean.parseBoolean(Configuration.GetServerProperty(LIC_PROP, Boolean.FALSE.toString())) && isInstalledAndEnabled();
 	}
-	
+
+	private boolean isInstalledAndEnabled() {
+		synchronized(DataStore.class) {
+			if(self == null)
+				for(Object p : PluginAPI.GetInstalledPlugins())
+					if(PluginAPI.GetPluginIdentifier(p).toLowerCase().equals("sjq")) {
+						self = p;
+						break;
+					}
+			return self != null;
+		}
+	}
+
 	/**
 	 * Get all output generated by the given queue id; this includes test and task output combined into one String
 	 * @param qId The queue id to return the task output for
@@ -1269,7 +1273,7 @@ public final class DataStore {
 	public String getTaskLog(long qId) {
 		return getTaskLog(qId, (QueuedTask.OutputType)null);
 	}
-	
+
 	/**
 	 * Return the task output for the given queue id
 	 * @param qId The queue id to get output for
@@ -1301,7 +1305,7 @@ public final class DataStore {
 			}
 		}
 	}
-	
+
 	/**
 	 * Convenience method for STVi access to specific log types
 	 * @param qId The queue id to read logs for
@@ -1311,7 +1315,7 @@ public final class DataStore {
 	public String getTaskLog(long qId, String type) {
 		return getTaskLog(qId, QueuedTask.OutputType.valueOf(type.toUpperCase()));
 	}
-	
+
 	/**
 	 * Get a list of all events supported and processed by the engine
 	 * @return The array of event names that the SJQ engine currently listens for and processes
@@ -1323,7 +1327,7 @@ public final class DataStore {
 		// Remove RecordingSegmentAdded because it's grouped in with RecordingStarted and should be processed internally only
 		return (String[])ArrayUtils.removeElement(events.split(","), "RecordingSegmentAdded");
 	}
-	
+
 	/**
 	 * Get a list of events that favourites and manual recordings can attach tasks to
 	 * @return The array of supported tv events
@@ -1334,7 +1338,7 @@ public final class DataStore {
 			return new String[0];
 		return events.split(",");
 	}
-	
+
 	/**
 	 * Attach a task to an event; the event should be one of the supported engine events, but it's not enforced
 	 * @param taskId The task id to attach to the given event
@@ -1344,7 +1348,7 @@ public final class DataStore {
 	public void addTaskToEvent(String taskId, String eventId) {
 		setSetting(eventId, TaskList.addTask(taskId, getSetting(eventId, "")));	
 	}
-	
+
 	/**
 	 * Attach an array of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
 	 * @param taskIds An array of task ids to be attached to the given event id
@@ -1355,7 +1359,7 @@ public final class DataStore {
 		for(String taskId : taskIds)
 			addTaskToEvent(taskId, eventId);
 	}
-	
+
 	/**
 	 * Attach a Collection of task ids to the given event id; the event should be one of the supported engine events, but it's not enforced
 	 * @param taskIds The collection of task ids to attach to the given event id
@@ -1365,7 +1369,7 @@ public final class DataStore {
 	public void addTasksToEvent(Collection<String> taskIds, String eventId) {
 		addTasksToEvent(taskIds.toArray(new String[taskIds.size()]), eventId);
 	}
-	
+
 	/**
 	 * Remove the given task id from the given event id
 	 * @param taskId The task id to be removed
@@ -1375,7 +1379,7 @@ public final class DataStore {
 	public void removeTaskFromEvent(String taskId, String eventId) {
 		setSetting(eventId, TaskList.removeTask(taskId, getSetting(eventId, "")));
 	}
-	
+
 	/**
 	 * Remove the array of task ids from the given event id
 	 * @param taskIds The array of task ids to be removed
@@ -1386,7 +1390,7 @@ public final class DataStore {
 		for(String taskId : taskIds)
 			removeTaskFromEvent(taskId, eventId);
 	}
-	
+
 	/**
 	 * Remove the collection of task ids from the given event id
 	 * @param taskIds The collection of task ids to be removed
@@ -1396,7 +1400,7 @@ public final class DataStore {
 	public void removeTasksFromEvent(Collection<String> taskIds, String eventId) {
 		removeTasksFromEvent(taskIds.toArray(new String[taskIds.size()]), eventId);
 	}
-	
+
 	/**
 	 * Return an array of all task ids attached to the given event
 	 * @param eventId The event to lookup
@@ -1416,7 +1420,7 @@ public final class DataStore {
 	boolean setTaskResources(QueuedTask qt, int usedRes) {
 		PreparedStatement rmStmt = stmts.get(DEL_RES_ADJ);
 		PreparedStatement inStmt = stmts.get(ADD_RES_ADJ);
-		
+
 		try {
 			rmStmt.setLong(1, qt.getQueueId());
 			rmStmt.executeUpdate();

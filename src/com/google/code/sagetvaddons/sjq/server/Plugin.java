@@ -31,6 +31,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import sage.SageTVPlugin;
 import sage.SageTVPluginRegistry;
+import sagex.api.Configuration;
 
 import com.google.code.sagetvaddons.license.License;
 import com.google.code.sagetvaddons.license.LicenseResponse;
@@ -82,6 +83,17 @@ public final class Plugin implements SageTVPlugin {
 	 * @param reg The plugin registry
 	 */
 	public Plugin(SageTVPluginRegistry reg) {
+		// Validate the license file
+		License.autoConfig(DataStore.get().getSetting(OPT_EMAIL), new File("plugins/sagetv-addons.lic").getAbsolutePath());
+		LicenseResponse resp = License.isLicensed(PLUGIN_ID);
+		boolean isLicensed = resp.isLicensed();
+		if(!isLicensed) {
+			LOG.warn("Unable to validate sagetv-addons license file!  Some features of this software have been disabled!");
+			LOG.warn("License server response: " + resp.getMessage());
+		} else
+			LOG.info("sagetv-addons license successfully validated!");
+		Configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(isLicensed));
+
 		timer = null;
 		agent = null;
 		if(!CRONTAB.exists()) {
@@ -268,15 +280,6 @@ public final class Plugin implements SageTVPlugin {
 		DataStore ds = DataStore.get();
 		ds.setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
 		ds.setSetting("SupportedTvEvents", StringUtils.join(TV_EVENTS, ','));
-
-		// Validate the license file
-		License.autoConfig(DataStore.get().getSetting(OPT_EMAIL), new File("plugins/sagetv-addons.lic").getAbsolutePath());
-		LicenseResponse resp = License.isLicensed(PLUGIN_ID);
-		if(!resp.isLicensed()) {
-			LOG.warn("Unable to validate sagetv-addons license file!  Some features of this software have been disabled!");
-			LOG.warn("License server response: " + resp.getMessage());
-		} else
-			LOG.info("sagetv-addons license successfully validated!");
 		
 		// Create the timer thread, which will run the agent pinger and the task queue threads periodically
 		if(timer != null)
@@ -345,6 +348,8 @@ public final class Plugin implements SageTVPlugin {
 		SageTVPluginRegistry reg = (SageTVPluginRegistry)API.apiNullUI.pluginAPI.GetSageTVPluginRegistry();
 		for(String event : EVENTS)
 			reg.eventUnsubscribe(this, event);
+		
+		Configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(false));
 	}
 
 	@SuppressWarnings("rawtypes")

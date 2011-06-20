@@ -65,6 +65,22 @@ final public class TaskQueue {
 		@Override
 		public void run() {
 			LOG.info("Running queue processor now!");
+			DataStore ds = DataStore.get();
+			StringBuilder licMsg = new StringBuilder("Enforcing licensing restrictions... ");
+			if(ds.isLicensed())
+				licMsg.append("license is valid!");
+			else {
+				licMsg.append("license is INVALID; applying license restrictions");
+				Client[] clnts = ds.getAllClients();
+				for(int i = 1; i < clnts.length; ++i)
+					ds.deleteClient(clnts[i]);
+				if(clnts.length >= 1) {
+					Task[] tasks = clnts[0].getTasks();
+					if(tasks.length > 0)
+						clnts[0].setTasks(new Task[] {tasks[0]});
+					ds.saveClient(clnts[0]);
+				}
+			}
 			synchronized(TaskQueue.class) {
 				if(!ignoreReturned) {
 					taskAll.cancel();
@@ -77,7 +93,6 @@ final public class TaskQueue {
 					taskIgnore.cancel();
 					taskIgnore = null;
 				}
-				DataStore ds = DataStore.get();
 				Config cfg = Config.get();
 				PendingTask[] tasks = ds.getPendingTasks(ignoreReturned);
 				for(PendingTask t : tasks) {
