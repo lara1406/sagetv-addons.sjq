@@ -81,6 +81,7 @@ final public class TaskQueue {
 					ds.saveClient(clnts[0]);
 				}
 			}
+			LOG.info(licMsg.toString());
 			synchronized(TaskQueue.class) {
 				if(!ignoreReturned) {
 					taskAll.cancel();
