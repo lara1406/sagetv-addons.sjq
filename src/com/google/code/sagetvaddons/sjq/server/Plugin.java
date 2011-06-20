@@ -83,17 +83,6 @@ public final class Plugin implements SageTVPlugin {
 	 * @param reg The plugin registry
 	 */
 	public Plugin(SageTVPluginRegistry reg) {
-		// Validate the license file
-		License.autoConfig(DataStore.get().getSetting(OPT_EMAIL), new File("plugins/sagetv-addons.lic").getAbsolutePath());
-		LicenseResponse resp = License.isLicensed(PLUGIN_ID);
-		boolean isLicensed = resp.isLicensed();
-		if(!isLicensed) {
-			LOG.warn("Unable to validate sagetv-addons license file!  Some features of this software have been disabled!");
-			LOG.warn("License server response: " + resp.getMessage());
-		} else
-			LOG.info("sagetv-addons license successfully validated!");
-		Configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(isLicensed));
-
 		timer = null;
 		agent = null;
 		if(!CRONTAB.exists()) {
@@ -277,6 +266,17 @@ public final class Plugin implements SageTVPlugin {
 
 	@Override
 	public void start() {
+		// Validate the license file
+		License.autoConfig(DataStore.get().getSetting(OPT_EMAIL), new File("plugins/sagetv-addons.lic").getAbsolutePath());
+		LicenseResponse resp = License.isLicensed(PLUGIN_ID);
+		boolean isLicensed = resp.isLicensed();
+		if(!isLicensed) {
+			LOG.warn("Unable to validate sagetv-addons license file!  Some features of this software have been disabled!");
+			LOG.warn("License server response: " + resp.getMessage());
+		} else
+			LOG.info("sagetv-addons license successfully validated!");
+		Configuration.SetServerProperty(DataStore.LIC_PROP, Boolean.toString(isLicensed));
+
 		DataStore ds = DataStore.get();
 		ds.setSetting("SupportedEvents", StringUtils.join(EVENTS, ','));
 		ds.setSetting("SupportedTvEvents", StringUtils.join(TV_EVENTS, ','));
